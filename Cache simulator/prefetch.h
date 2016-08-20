@@ -26,9 +26,6 @@ public:
 	Long int is support */
 	map < vector<long int>, long int> Rules;
 
-	/**/
-
-
 	Prefetch() : RAM() {};
 
 	/* LRU structure.
@@ -52,5 +49,4 @@ public:
 	/* Let's add rules there for limitation its numbers. */
 	void addRule(vector<long int> rule, long int importance);
 
-	void evictRule();
 };

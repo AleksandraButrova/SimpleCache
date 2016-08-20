@@ -29,7 +29,6 @@ bool Prefetch::read(long int addr)
 		return 0;
 }
 
-
 long int Prefetch::checkRules()
 {
 	long int prefetched = 0;
@@ -101,9 +100,3 @@ void Prefetch::addRule(vector<long int> rule, long int importance)
 
 	Rules.emplace(rule, importance);
 }
-
-void Prefetch::evictRule()
-{
-	
-}
-

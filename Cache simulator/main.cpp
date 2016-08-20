@@ -282,7 +282,7 @@ void processingLearnAndPrefetch1(string trace_name)
 }
 
 /* The first trace for learning,
-the secind for check prefetcher.*/
+the second for check prefetcher.*/
 void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 {
 	processWithLearning(trace_name1);

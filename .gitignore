@@ -91,3 +91,7 @@ Cache simulator/big_trace
 Cache simulator/rules.txt
 *.ilk
 Debug/Cache simulator.pdb
+.vs/Cache simulator/v14/.suo
+*.idb
+Cache simulator/x64/Debug/vc140.pdb
+*.pdb
