@@ -11,5 +11,7 @@ public:
 
 	void write(long int addr);							//	It writes data on disks.
 	void read(long int addr);							//	It reads data from desks. 
-	void print_statistics(long int lba_counter);		//	It prints miss counter and request counter on console.
+	void printStatistics(long int lba_counter);		//	It prints miss counter and request counter on console.
+	void cleanStatistics();
+	void saveStatistics(long int lba_counter, string traceName);
  };
