@@ -1,6 +1,7 @@
 #pragma once
 #include "prefetch.h"
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -99,4 +100,19 @@ void Prefetch::addRule(vector<long int> rule, long int importance)
 	
 
 	Rules.emplace(rule, importance);
+}
+
+void Prefetch::saveStatistics(long int lba_counter, string traceName)
+{
+	fstream fout("statistics.txt", ios_base::app);
+	fout << "================================\nPrefetcher.\nStatistics of " << traceName.c_str();
+	fout << "\n================================\n\n";
+
+	fout << "Amount of requests = " << lba_counter << endl;
+	fout << "# requests  = " << requests_counter << endl;
+	fout << "# miss cache = " << miss_counter << endl;
+
+	fout << "# Read miss ratio = " << 100 * miss_counter * 1.0 / requests_counter << endl;
+	fout << "# Read hit ratio = " << 100 * (1 - miss_counter * 1.0 / requests_counter) << endl;
+	fout << "# Wrong prefetched = \n";
 }
