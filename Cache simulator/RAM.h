@@ -17,6 +17,7 @@ class RAM : public Storage
 private:
 	int size = RAM_entry_num;
 public:		
+	long int miss_counter;
 	long int filled;												// It is number of enmtry. It mustn't be exceed RAM_size from param.h	
 	int wrongAdd;		
 	list <Chunk*> LRU;												// LRU structure for eviction
