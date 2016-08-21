@@ -49,9 +49,10 @@ bool stepLearn(long int ch, string action)
 	// Learning control
 	if (history.size >= learning_lim)
 	{
+		cout << "History is full." << endl;
+		apriori(history.item, "rules.txt", prefetcher.Rules);
 		return 0;
 	}
-
 	return 1;
 }
 
@@ -100,18 +101,26 @@ void processing(string trace_name)
 		action = buff;
 
 		trace >> buff;					// Read incoming time (haven't used)
-		
-		lba_counter++;
 
-		if (action == "read" && !cache.read(lba))
-			storage.read(lba);									
-		
-		if (action == "write")
+										// Separete all data into LBA
+										// And looking for chunks' number including LBA from lba to (lba + size/lba_size)
+		long int chunk_beg = findNum(lba);
+		long int chunk_end = findNum(lba + size);
+
+		// Processing each chunk in the gap found above
+		for (long int ch = chunk_beg; ch <= chunk_end; ch++)
 		{
-			cache.write(lba);
-			storage.write(lba);
+			lba_counter++;
+
+			if (action == "read" && !cache.read(ch))
+				storage.read(ch);									
+
+			if (action == "write")
+			{
+				cache.write(ch);
+				storage.write(ch);
+			}
 		}
-		
 	}
 	trace.close();
 }
@@ -119,6 +128,7 @@ void processing(string trace_name)
 /* Learning prefetcher on trace */ 
 void processWithLearning(string trace_name)
 {
+
 	ifstream trace(trace_name);
 
 	char buff[20];						// buffer for reading data about request
@@ -127,9 +137,7 @@ void processWithLearning(string trace_name)
 	long int size;
 	string action;
 
-	bool endOfTrace = trace.eof();
-
-	while (!endOfTrace)
+	while (!trace.eof())
 	{
 		line_counter++;					// TEST LINE
 
@@ -144,18 +152,25 @@ void processWithLearning(string trace_name)
 
 		trace >> buff;					// Read incoming time (haven't used)
 
-		lba_counter++;
-			
-		endOfTrace = trace.eof();
+										// Separete all data into LBA
+										// And looking for chunks' number including LBA from lba to (lba + size/lba_size)
+		long int chunk_beg = findNum(lba);
+		long int chunk_end = findNum(lba + size);
 
-		if ( (stepLearn(lba, action) == 0) || (endOfTrace == true))
+		// Processing each chunk in the gap found above
+		for (long int ch = chunk_beg; ch <= chunk_end; ch++)
 		{
-			trace.close();
-			cout << "History is full." << endl;
-			apriori(history.item, "rules.txt", prefetcher.Rules);
-			endOfTrace = true;			// For finish while()
+			lba_counter++;
+			
+			if (stepLearn(ch, action) == 0)
+			{
+				trace.close();
+				return;
+			}
 		}
 	}
+	// In case if number chunks in trace is lesser then learning_lim
+	apriori(history.item, "rules.txt", prefetcher.Rules);
 }
 
 // without learning
@@ -183,10 +198,20 @@ void processWithPrefetcher(string trace_name)
 		trace >> buff;					// Read action with data : read/write
 		action = buff;
 
-		trace >> buff;					// Read incoming time (haven't used)		
-		
-		lba_counter++;
-		stepPrefRamStor(lba, action);
+		trace >> buff;					// Read incoming time (haven't used)
+
+										// Separete all data into LBA
+										// And looking for chunks' number including LBA from lba to (lba + size/lba_size)
+		long int chunk_beg = findNum(lba);
+		long int chunk_end = findNum(lba + size);
+
+		// Processing each chunk in the gap found above
+		for (long int ch = chunk_beg; ch <= chunk_end; ch++)
+		{
+			lba_counter++;
+
+			stepPrefRamStor(ch, action);
+		}
 	}
 }
 
@@ -220,28 +245,32 @@ void processingLearnAndPrefetch1(string trace_name)
 
 		trace >> buff;					// Read incoming time (haven't used)
 
-		lba_counter++;
+										// Separete all data into LBA
+										// And looking for chunks' number including LBA from lba to (lba + size/lba_size)
+		long int chunk_beg = findNum(lba);
+		long int chunk_end = findNum(lba + size);
 
-		if (!switcher && stepLearn(lba, action) == 0)
+		// Processing each chunk in the gap found above
+		for (long int ch = chunk_beg; ch <= chunk_end; ch++)
 		{
-			/* History is fill.
-			 Go to processing obtained information.
-			 Then switch to usual processing mode with prefetcher.*/
-			cout << "History is full." << endl;
-			apriori(history.item, "rules.txt", prefetcher.Rules);
-			switcher = true;
+			lba_counter++;
 
-			/*====================================
-			Update statistics after change modes.
-			Print statistics after learning. 
-			? Should statistics be printed to fale?
-			=====================================*/
+			if (!switcher && stepLearn(ch, action) == 0)
+			{
+				switcher = true;
 
-		}
+				/*====================================
+				Update statistics after change modes.
+				Print statistics after learning. 
+				? Should statistics be printed to fale?
+				=====================================*/
+			}
 
-		else
-		{
-			stepPrefRamStor(lba, action);
+			else
+			{
+				stepPrefRamStor(ch, action);
+			}
+
 		}
 	}
 
