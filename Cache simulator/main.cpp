@@ -257,13 +257,17 @@ void processingLearnAndPrefetch1(string trace_name)
 
 			if (!switcher && stepLearn(ch, action) == 0)
 			{
+				/* History is fill.
+				Go to processing obtained information.
+				Then switch to usual processing mode with prefetcher.*/
+				cout << "History is full." << endl;
+				apriori(history.item, "rules.txt", prefetcher.Rules);
 				switcher = true;
 
-				/*====================================
-				Update statistics after change modes.
-				Print statistics after learning. 
-				? Should statistics be printed to fale?
-				=====================================*/
+				/* Update statistics after change modes.
+				Print statistics after learning and delete.*/
+				saveAllStatistics();
+				cleanAllStatistics();
 			}
 
 			else
