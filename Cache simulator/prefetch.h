@@ -33,7 +33,7 @@ public:
 	void pustToBuff(long int addr);
 
 
-	/* If read is successly done return "1" 
+	/* If read is successfuly done return "1" 
 	 else "0" (in case chunk does not exist in prefetcher). */
 	bool read(long int addr);
 	

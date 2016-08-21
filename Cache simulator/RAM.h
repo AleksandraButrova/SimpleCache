@@ -18,8 +18,14 @@ private:
 	int size = RAM_entry_num;
 public:		
 	long int filled;												// It is number of enmtry. It mustn't be exceed RAM_size from param.h	
+	int wrongAdd;		
 	list <Chunk*> LRU;												// LRU structure for eviction
-	unordered_map <long int, list<Chunk*>::iterator> HashTable;		// Structure for searches
+	
+																	/*Param long int: address of chunk.	
+	Param bool: 
+	false = this lba haven't been read after adding
+	true = this lba have been read after adding*/
+	unordered_map <long int, pair< list<Chunk*>::iterator, bool>> HashTable;		// Structure for searches
 	
 	RAM();
 	
@@ -35,7 +41,6 @@ public:
 	
 	void remove(long int addr);
 
-	// methonds interaction with prefetcher		
-
+	void saveStatistics(long int lba_counter, string traceName);
 };
 	
