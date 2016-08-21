@@ -109,7 +109,7 @@ void RAM::remove(long int addr)
 void RAM::saveStatistics(long int lba_counter, string traceName)
 {
 	fstream fout("statistics.txt", ios_base::app);
-	fout << "================================\nPrefetcher.\nStatistics of " << traceName.c_str();
+	fout << "================================\nRAM.\nStatistics of " << traceName.c_str();
 	fout << "\n================================\n\n";
 
 	fout << "Amount of requests = " << lba_counter << endl;

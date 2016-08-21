@@ -8,7 +8,7 @@ class Storage{
 	 // here may be data 
 public:
 	long int requests_counter;
-	long int miss_counter;
+	long int read_counter;
 
 	Storage();
 

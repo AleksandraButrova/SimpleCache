@@ -31,6 +31,19 @@ void deleteCopy(long int addr)
 		cache.remove(addr);
 }
 
+void saveAllStatistics()
+{
+	storage.saveStatistics(lba_counter, "statistics.txt");
+	cache.saveStatistics(lba_counter, "statistics.txt");
+	prefetcher.saveStatistics(lba_counter, "statistics.txt");
+}
+void cleanAllStatistics()
+{
+	storage.cleanStatistics();
+	cache.cleanStatistics();
+	prefetcher.cleanStatistics();
+}
+
 /* Processing one chunk "ch" with RAM and storage.*/
 bool stepLearn(long int ch, string action)
 {
@@ -231,12 +244,10 @@ void processingLearnAndPrefetch1(string trace_name)
 			apriori(history.item, "rules.txt", prefetcher.Rules);
 			switcher = true;
 
-			/*====================================
-			Update statistics after change modes.
-			Print statistics after learning. 
-			? Should statistics be printed to fale?
-			=====================================*/
-
+			/* Update statistics after change modes.
+			Print statistics after learning and delete.*/
+			saveAllStatistics();
+			cleanAllStatistics();
 		}
 
 		else
@@ -257,6 +268,12 @@ the second for check prefetcher.*/
 void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 {
 	processWithLearning(trace_name1);
+
+	/* Update statistics after change modes.
+	Print statistics after learning and delete.*/
+	saveAllStatistics();
+	cleanAllStatistics();
+
 	processWithPrefetcher(trace_name2);
 	// add here printing statistic 
 }
