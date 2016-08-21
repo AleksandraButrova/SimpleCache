@@ -1,3 +1,6 @@
+#include <string>
+
+using namespace std;
 /* Class Storage discribe data on disks.
 In the model there isn't necessary to store data,
 but some methods are needed to be.*/ 
