@@ -149,6 +149,7 @@ void processWithLearning(string trace_name)
 	long int lba;
 	long int size;
 	string action;
+	string type;
 
 	while (!trace.eof())
 	{
@@ -162,9 +163,15 @@ void processWithLearning(string trace_name)
 
 		trace >> buff;					// Read action with data : read/write
 		action = buff;					
+		
+		// new line
+		trace >> buff;
+		type = buff;
 
 		trace >> buff;					// Read incoming time (haven't used)
 
+		if (type == "S")
+			continue;
 										// Separete all data into LBA
 										// And looking for chunks' number including LBA from lba to (lba + size/lba_size)
 		long int chunk_beg = findNum(lba);
@@ -197,6 +204,7 @@ void processWithPrefetcher(string trace_name)
 	long int lba;
 	long int size;
 	string action;
+	string type;
 
 	while (!trace.eof())
 	{
@@ -211,7 +219,14 @@ void processWithPrefetcher(string trace_name)
 		trace >> buff;					// Read action with data : read/write
 		action = buff;
 
+		// new line
+		trace >> buff;
+		type = buff;
+
 		trace >> buff;					// Read incoming time (haven't used)
+
+		if (type == "S")
+			continue;
 
 										// Separete all data into LBA
 										// And looking for chunks' number including LBA from lba to (lba + size/lba_size)
