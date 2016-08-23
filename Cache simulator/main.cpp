@@ -139,6 +139,7 @@ void processWithLearning(string trace_name)
 	long int lba;
 	long int size;
 	string action;
+	string type;
 
 	bool endOfTrace = trace.eof();
 
@@ -155,7 +156,14 @@ void processWithLearning(string trace_name)
 		trace >> buff;					// Read action with data : read/write
 		action = buff;					
 
+		// new line
+		trace >> buff;
+		type = buff;
+
 		trace >> buff;					// Read incoming time (haven't used)
+
+		if (type == "S")
+			continue;
 
 		lba_counter++;
 			
@@ -182,6 +190,7 @@ void processWithPrefetcher(string trace_name)
 	long int lba;
 	long int size;
 	string action;
+	string type;
 
 	while (!trace.eof())
 	{
@@ -196,8 +205,15 @@ void processWithPrefetcher(string trace_name)
 		trace >> buff;					// Read action with data : read/write
 		action = buff;
 
-		trace >> buff;					// Read incoming time (haven't used)		
-		
+		// new line
+		trace >> buff;
+		type = buff;
+
+		trace >> buff;					// Read incoming time (haven't used)	
+
+		if (type == "S")
+			continue;
+
 		lba_counter++;
 		stepPrefRamStor(lba, action);
 	}
@@ -214,7 +230,8 @@ void processingLearnAndPrefetch1(string trace_name)
 
 	long int lba;
 	long int size;
-	string action;
+	string action;		// read or write
+	string type;		// sequentual or random
 
 	bool switcher = false;				// when learning will be finished it switches process in mode with prefetcher
 
@@ -231,9 +248,21 @@ void processingLearnAndPrefetch1(string trace_name)
 		trace >> buff;					// Read action with data : read/write
 		action = buff;
 
+		// New line!!
+		trace >> buff;
+		type = buff;
+
 		trace >> buff;					// Read incoming time (haven't used)
 
+		// Skip sequetual 
+
+		if (type == "S")
+			continue;
+
+		cout << type << endl;
+
 		lba_counter++;
+
 
 		if (!switcher && stepLearn(lba, action) == 0)
 		{
