@@ -312,31 +312,17 @@ void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 
 	processWithPrefetcher(trace_name2);
 	// add here printing statistic 
+
+	saveAllStatistics();
 }
-
-
 
 
 long int main() 
 {
-	/* ==================================
-				ATTENTION!
-	There are sigle sample of classes 
-	Prefetcher, RAM, Storage and History.
-	Update them where appropriate.
-	==================================== */
 
-	//processing("big_trace_222");
-	//processing("big_trace");
-	//processing_n_learning("big_trace");
+	string traceROSTELECOM = "C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW";
+	processingLearnAndPrefetch2(traceROSTELECOM, traceROSTELECOM);
 
-	//processing_with_prefetcher("big_trace");
-	
-	processWithLearning("big_trace");
-
-	cout<<"Processed lines = "<<line_counter<<" / 16721776"<<endl;
-	
-	
 	system("PAUSE");
 	return 0;
 }
