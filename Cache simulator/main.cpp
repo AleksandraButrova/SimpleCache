@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <time.h>
 
 using namespace std;
 
@@ -47,23 +48,20 @@ void cleanAllStatistics()
 /* Processing one chunk "ch" with RAM and storage.*/
 bool stepLearn(long int ch, string action)
 {
-	if (action == "read" && !cache.read(ch))		// if request for read and chunk 'ch' doesn't exist in cache
+	if (action == "r" && !cache.read(ch))		// if request for read and chunk 'ch' doesn't exist in cache
 	{
 		storage.read(ch);							// then read from storage
 		history.push_back(ch);						// and fill read heastory
 	}
 
-	if (action == "write")							// if request for write
+	if (action == "w")							// if request for write
 	{
 		cache.write(ch);							// then just write in cache and in storage 
 		storage.write(ch);
 	}
-
 	// Learning control
-	if (history.size >= learning_lim)
-	{
-		return 0;
-	}
+	//if (history.size >= learning_lim)
+	//	return 0;
 
 	return 1;
 }
@@ -71,14 +69,14 @@ bool stepLearn(long int ch, string action)
 /* Processing one chunk "ch" with prefetcher, RAM and storage.*/
 void stepPrefRamStor(long int ch, string action)
 {
-	if (action == "read" && !prefetcher.read(ch)) // if request for read and chunk 'ch' doesn't exist in prefetcher
+	if (action == "r" && !prefetcher.read(ch)) // if request for read and chunk 'ch' doesn't exist in prefetcher
 	{
 
 		if (!cache.read(ch))		// then read from cache
 			storage.read(ch);		// and if it is impossible then read from storage
 	}
 
-	if (action == "write")
+	if (action == "w")
 	{
 		storage.write(ch);
 		cache.write(ch);
@@ -116,10 +114,10 @@ void processing(string trace_name)
 		
 		lba_counter++;
 
-		if (action == "read" && !cache.read(lba))
+		if (action == "r" && !cache.read(lba))
 			storage.read(lba);									
 		
-		if (action == "write")
+		if (action == "w")
 		{
 			cache.write(lba);
 			storage.write(lba);
@@ -132,7 +130,7 @@ void processing(string trace_name)
 /* Learning prefetcher on trace */ 
 void processWithLearning(string trace_name)
 {
-	ifstream trace(trace_name);
+	ifstream trace("final_trace_handled_SR_5sec_NEW");
 
 	char buff[20];						// buffer for reading data about request
 
@@ -161,18 +159,26 @@ void processWithLearning(string trace_name)
 		type = buff;
 
 		trace >> buff;					// Read incoming time (haven't used)
-
+		
+		if (line_counter % 1000000 == 0)
+			cout << line_counter <<"\t" << lba_counter << endl;
+		
 		if (type == "S")
 			continue;
 
 		lba_counter++;
-			
+		
+
 		endOfTrace = trace.eof();
 
-		if ( (stepLearn(lba, action) == 0) || (endOfTrace == true))
+		// If use learning limit the uncomment
+		//if ( (stepLearn(lba, action) == 0) || (endOfTrace == true))
+		stepLearn(lba, action);
+		if (endOfTrace == true)
 		{
 			trace.close();
 			cout << "History is full." << endl;
+			cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl;
 			apriori(history.item, "rules.txt", prefetcher.Rules);
 			endOfTrace = true;			// For finish while()
 		}
@@ -183,7 +189,7 @@ void processWithLearning(string trace_name)
 void processWithPrefetcher(string trace_name)
 {
 
-	ifstream trace(trace_name);
+	ifstream trace("final_trace_handled_SR_5sec_NEW");
 
 	char buff[20];						// buffer for reading data about request
 
@@ -219,93 +225,112 @@ void processWithPrefetcher(string trace_name)
 	}
 }
 
+
+
 /*One trace is processed one times by two parts:
 the first is learining,
 the second is process with prefetcher.*/
-void processingLearnAndPrefetch1(string trace_name)
-{
-	ifstream trace(trace_name);
-
-	char buff[20];						// buffer for input data
-
-	long int lba;
-	long int size;
-	string action;		// read or write
-	string type;		// sequentual or random
-
-	bool switcher = false;				// when learning will be finished it switches process in mode with prefetcher
-
-	while (!trace.eof())
-	{
-		line_counter++;					// TEST LINE
-
-		trace >> buff;					// Read LBA from trace
-		lba = atoi(buff);				// Convert into the number
-
-		trace >> buff;					// Read size of requested data
-		size = atoi(buff);				// Convert into the number
-
-		trace >> buff;					// Read action with data : read/write
-		action = buff;
-
-		// New line!!
-		trace >> buff;
-		type = buff;
-
-		trace >> buff;					// Read incoming time (haven't used)
-
-		// Skip sequetual 
-
-		if (type == "S")
-			continue;
-
-		cout << type << endl;
-
-		lba_counter++;
-
-
-		if (!switcher && stepLearn(lba, action) == 0)
-		{
-			/* History is fill.
-			 Go to processing obtained information.
-			 Then switch to usual processing mode with prefetcher.*/
-			cout << "History is full." << endl;
-			apriori(history.item, "rules.txt", prefetcher.Rules);
-			switcher = true;
-
-			/* Update statistics after change modes.
-			Print statistics after learning and delete.*/
-			saveAllStatistics();
-			cleanAllStatistics();
-		}
-
-		else
-		{
-			stepPrefRamStor(lba, action);
-		}
-	}
-
-	if (switcher == false)
-		cout << "Number chunks in trace is lesser then learning_lim.\nPlease, make learning_limit lesser or use method processingLearnAndPrefetch2.\n";
-	else
-		;// print statictics
-
-}
+//void processingLearnAndPrefetch1(string trace_name)
+//{
+//	ifstream trace(trace_name);
+//
+//	char buff[20];						// buffer for input data
+//
+//	long int lba;
+//	long int size;
+//	string action;		// read or write
+//	string type;		// sequentual or random
+//
+//	bool switcher = false;				// when learning will be finished it switches process in mode with prefetcher
+//
+//	while (!trace.eof())
+//	{
+//		line_counter++;					// TEST LINE
+//
+//		trace >> buff;					// Read LBA from trace
+//		lba = atoi(buff);				// Convert into the number
+//
+//		trace >> buff;					// Read size of requested data
+//		size = atoi(buff);				// Convert into the number
+//
+//		trace >> buff;					// Read action with data : read/write
+//		action = buff;
+//
+//		// New line!!
+//		trace >> buff;
+//		type = buff;
+//
+//		trace >> buff;					// Read incoming time (haven't used)
+//
+//		// Skip sequetual 
+//
+//		if (type == "S")
+//			continue;
+//
+//		cout << type << endl;
+//
+//		lba_counter++;
+//
+//
+//		if (!switcher && stepLearn(lba, action) == 0)
+//		{
+//			/* History is fill.
+//			 Go to processing obtained information.
+//			 Then switch to usual processing mode with prefetcher.*/
+//			cout << "History is full." << endl;
+//			apriori(history.item, "rules.txt", prefetcher.Rules);
+//			switcher = true;
+//
+//			/* Update statistics after change modes.
+//			Print statistics after learning and delete.*/
+//			saveAllStatistics();
+//			cleanAllStatistics();
+//		}
+//
+//		else
+//		{
+//			stepPrefRamStor(lba, action);
+//		}
+//	}
+//
+//	if (switcher == false)
+//		cout << "Number chunks in trace is lesser then learning_lim.\nPlease, make learning_limit lesser or use method processingLearnAndPrefetch2.\n";
+//	else
+//		;// print statictics
+//
+//}
 
 /* The first trace for learning,
 the second for check prefetcher.*/
 void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 {
+	time_t time1;
+	time(&time1);
+	cout << "Now: " << ctime(&time1)<< endl;
+	
 	processWithLearning(trace_name1);
+
 
 	/* Update statistics after change modes.
 	Print statistics after learning and delete.*/
 	saveAllStatistics();
 	cleanAllStatistics();
-
+	
+	time_t time2;
+	time(&time2);
+	cout << "Now: " << ctime(&time2) << endl;
+	//cout << "Wasted for learning: " << ctime(&time2) - ctime(&time1) << endl;
+	
+	cache.cleanAndResize(RAM_entry_num);
 	processWithPrefetcher(trace_name2);
-	// add here printing statistic 
+	
 
+	time_t time3;
+	time(&time3);
+	cout << "Now: " << ctime(&time3) << endl;
+	//cout << "Wasted for processing: " << ctime(&time3) - ctime(&time2) << endl;
+
+	//printing statistic 
 	saveAllStatistics();
 }
 
@@ -313,7 +338,9 @@ void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 long int main() 
 {
 
-	string traceROSTELECOM = "C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW";
+
+	//string traceROSTELECOM = "\"C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW\"";
+	string traceROSTELECOM = "final_trace_handled_SR_5sec_NEW";
 	processingLearnAndPrefetch2(traceROSTELECOM, traceROSTELECOM);
 
 	system("PAUSE");

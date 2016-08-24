@@ -15,11 +15,18 @@ which consists of chunks. */
 class RAM : public Storage
 {
 private:
-	int size = RAM_entry_num;
-public:		
-	long int miss_counter;
+	
+public:	
+
+	// for statistics
+	long int readReq;
+	long int writeReq;
+	long int missCounter;
+	long int wrongAdd;
+
+	int size;
 	long int filled;												// It is number of enmtry. It mustn't be exceed RAM_size from param.h	
-	int wrongAdd;		
+			
 	list <Chunk*> LRU;												// LRU structure for eviction
 	
 																	/*Param long int: address of chunk.	
@@ -28,6 +35,7 @@ public:
 	true = this lba have been read after adding*/
 	unordered_map <long int, pair< list<Chunk*>::iterator, bool>> HashTable;		// Structure for searches
 	
+	// 100% size
 	RAM();
 	
 	void evict();
@@ -43,5 +51,7 @@ public:
 	void remove(long int addr);
 
 	void saveStatistics(long int lba_counter, string traceName);
+	
+	void cleanAndResize(int new_size);
 };
 	

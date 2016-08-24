@@ -5,6 +5,14 @@
 
 using namespace std;
 
+Prefetch::Prefetch()
+{
+	filled = 0;
+	missCounter = 0;
+	readReq = 0;
+	writeReq = 0;
+	wrongAdd = 0;
+}
 
 void Prefetch::pustToBuff(long int addr)
 {
@@ -16,6 +24,7 @@ void Prefetch::pustToBuff(long int addr)
 
 bool Prefetch::read(long int addr)
 {
+	readReq++;
 	pustToBuff(addr);				// commit in history  for prefetcher analysis
 	checkRules();					// check rules for new prefetching
 
@@ -82,6 +91,8 @@ long int Prefetch::prefetch(long int addr)
 		update(addr);				// it is for this addr remains in prefetcher longer
 	else
 	{
+		prefetched++;
+
 		add(addr);
 		return addr;
 	}
@@ -109,10 +120,12 @@ void Prefetch::saveStatistics(long int lba_counter, string traceName)
 	fout << "\n================================\n\n";
 
 	fout << "Amount of requests = " << lba_counter << endl;
-	fout << "# requests  = " << requests_counter << endl;
-	fout << "# miss cache = " << miss_counter << endl;
+	fout << "# requests  = " << readReq + writeReq << endl;
+	fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout << "# Read miss ratio = " << 100 * miss_counter * 1.0 / requests_counter << endl;
-	fout << "# Read hit ratio = " << 100 * (1 - miss_counter * 1.0 / requests_counter) << endl;
-	fout << "# Wrong prefetched = \n";
+	fout << "# cache miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
+	fout << "# cache hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+
+	fout << "# Wrong prefetched = "<< wrongAdd <<"  (" << 100 * wrongAdd / prefetched << " %)\n";
+	fout << "Accuracy = " << 100 - 100 * wrongAdd / prefetched << " %\n";
 }

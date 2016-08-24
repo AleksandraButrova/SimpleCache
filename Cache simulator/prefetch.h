@@ -15,7 +15,8 @@ private:
 	long int rules_num = rules_numer;		// Number of stored rules
 
 public:
-	
+	long int prefetched;
+
 	/* Buffer for storage history. 
 	Buffer size must be equel window_size
 	for sunc with prefetcher learning. */
@@ -26,7 +27,7 @@ public:
 	Long int is support */
 	map < vector<long int>, long int> Rules;
 
-	Prefetch() : RAM() {};
+	Prefetch();
 
 	/* LRU structure.
 	Append to the end, removed from the begining. */

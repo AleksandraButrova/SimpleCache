@@ -8,7 +8,11 @@ using namespace std;
 RAM::RAM(){
 	Storage();
 	filled = 0;
+	missCounter = 0;
+	readReq = 0;
+	writeReq = 0;
 	wrongAdd = 0;
+	size = total_RAM_entry_number;
 }
 
 void RAM::evict(){
@@ -47,7 +51,7 @@ void RAM::add(long int num){
 }
 
 void RAM::update(long int num){
-	Chunk *temp = new Chunk(num);
+	//Chunk *temp = new Chunk(num);
 	
 	auto it = *HashTable.find(num)->second.first;
 
@@ -67,6 +71,8 @@ void RAM::update(long int num){
 // else "0" (in case chunk does not exist in RAM).
 bool RAM::read(long int addr)
 {
+	readReq++;
+
 	if (exist(addr))			
 	{
 		Storage::read(addr);								// then read and update
@@ -78,6 +84,8 @@ bool RAM::read(long int addr)
 	}
 	else
 	{
+		missCounter++;
+
 		add(addr);									// else add and write
 		Storage::write(addr);
 	}
@@ -87,7 +95,10 @@ bool RAM::read(long int addr)
 void RAM::write(long int addr)
 {
 	if (exist(addr))			// if addr exist at RAM 
+	{
 		update(addr);			// then update
+		writeReq++;
+	}
 }
 
 bool RAM::exist(long int addr)
@@ -113,10 +124,21 @@ void RAM::saveStatistics(long int lba_counter, string traceName)
 	fout << "\n================================\n\n";
 
 	fout << "Amount of requests = " << lba_counter << endl;
-	fout << "# requests  = " << requests_counter << endl;
-	fout << "# miss cache = " << miss_counter << endl;
+	fout << "# requests  = " << readReq + writeReq << endl;
+	fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout << "# Read miss ratio = " << 100 * miss_counter * 1.0 / requests_counter << endl;
-	fout << "# Read hit ratio = " << 100 * (1 - miss_counter * 1.0 / requests_counter) << endl;
-	fout << "# Wrong prefetched = \n";
+	fout << "# cache miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
+	fout << "# cache hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+}
+
+
+void RAM::cleanAndResize(int new_size)
+{
+	size = new_size;
+
+	filled = 0;
+	missCounter = 0;
+	LRU.clear();
+	HashTable.clear();
+
 }
