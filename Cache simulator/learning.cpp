@@ -52,15 +52,35 @@ map <vector<long int>, long int> makeL1(vector<vector<long int>> history)
 			vector<long int> temp;
 			temp.push_back(*it2);
 
-			long int seq_supp = calSupport(history, temp);
-			if (seq_supp >= min_supp)
-			{
-				L1.emplace(temp, seq_supp);
-			}
+			auto iter = L1.find(temp);
+
+			// if this sequential is not exist add it with support 1
+			if ( iter == L1.end())
+				L1.emplace(temp, 1);
+			// if exist then increment support
+			else
+				L1.at(temp) = iter->second + 1;
+
 		}
 	}
+
+	// delete sequential with support less min_supp
+	for (auto it = L1.begin(); it != L1.end(); )
+	{
+		if (it->second < min_supp)
+		{
+			auto it2 = it;
+			it++;
+			L1.erase(it2);
+		}
+		else
+			it++;
+	}
+	
+
 	return L1;
 }
+
 
 // Scan history and find frequent sequences in that, then return this set
 map <vector<long int>, long int> scanHistory(vector<vector<long int>> history, vector<vector<long int>> Ck, map <vector<long int>, long int> L)
@@ -137,7 +157,7 @@ vector<vector<long int>> generateCk(map <vector<long int>, long int> &L, vector<
 				vector<long int> temp = it1->first;
 				temp.push_back(n2);
 
-				if (!hasInfrequent(temp, history))
+				if (!hasInfrequent(temp, L))
 					ret.push_back(temp);
 			}
 		}
@@ -146,17 +166,18 @@ vector<vector<long int>> generateCk(map <vector<long int>, long int> &L, vector<
 }
 
 // check there is any subseq in this seq is not a frequet seq
-bool hasInfrequent(vector<long int> seq, vector<vector<long int>> history)//, map <vector<long int>, long int> &L)
+bool hasInfrequent(vector<long int> seq, map <vector<long int>, long int> &L)//, map <vector<long int>, long int> &L)
 {
 	vector<vector<long int>> Subseq = genSubseq(seq);
 
+	/* Scan frequent set L.
+	if at least one member does not exist at L
+	then our sequence seq has unfrequent subsequience
+	so seq also is unfrequent*/
 	for (auto it = Subseq.begin(); it != Subseq.end(); ++it)
 	{
-		long int seq_supp = calSupport(history, *it);
-		if (seq_supp < min_supp)
-		{
+		if (L.find(*it) == L.end())
 			return true;
-		}
 	}
 	return false;
 }
