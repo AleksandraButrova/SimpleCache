@@ -16,7 +16,7 @@ RAM::RAM(){
 }
 
 void RAM::evict(){
-	long int num_e = LRU.back()->num;
+	long long num_e = LRU.back()->num;
 
 	auto it = LRU.back();
 
@@ -33,7 +33,7 @@ void RAM::evict(){
 	filled--;
 }
 
-void RAM::add(long int num){
+void RAM::add(long long num){
 	Chunk *temp = new Chunk(num);
 	
 	if (filled >= size ) 	
@@ -50,7 +50,7 @@ void RAM::add(long int num){
 	filled++;
 }
 
-void RAM::update(long int num){
+void RAM::update(long long num){
 	//Chunk *temp = new Chunk(num);
 	
 	auto it = *HashTable.find(num)->second.first;
@@ -69,7 +69,7 @@ void RAM::update(long int num){
 
 // If read is successly done return "1" 
 // else "0" (in case chunk does not exist in RAM).
-bool RAM::read(long int addr)
+bool RAM::read(long long addr)
 {
 	readReq++;
 
@@ -92,7 +92,7 @@ bool RAM::read(long int addr)
 	return 0;
 }
 
-void RAM::write(long int addr)
+void RAM::write(long long addr)
 {
 	if (exist(addr))			// if addr exist at RAM 
 	{
@@ -101,7 +101,7 @@ void RAM::write(long int addr)
 	}
 }
 
-bool RAM::exist(long int addr)
+bool RAM::exist(long long addr)
 {
 	if (HashTable.find(addr) != HashTable.end())			// if addr exist at RAM
 		return true;
@@ -109,7 +109,7 @@ bool RAM::exist(long int addr)
 		return false;
 }
 
-void RAM::remove(long int addr)
+void RAM::remove(long long addr)
 {
 	LRU.remove(*HashTable.find(addr)->second.first);
 	HashTable.erase(addr);
@@ -117,7 +117,7 @@ void RAM::remove(long int addr)
 	filled--;
 }
 
-void RAM::saveStatistics(long int lba_counter, string traceName)
+void RAM::saveStatistics(long long lba_counter, string traceName)
 {
 	fstream fout("statistics.txt", ios_base::app);
 	fout << "================================\nRAM.\nStatistics of " << traceName.c_str();

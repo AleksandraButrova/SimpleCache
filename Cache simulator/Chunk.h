@@ -5,7 +5,7 @@ range of addresses is from num*chunk_size to (num+1)*chunk_size.*/
 class Chunk{
 	// here may be data	
 public:
-	long int num;
+	long long num;
 
-	Chunk(long int n) : num(n) {};
+	Chunk(long long n) : num(n) {};
 };

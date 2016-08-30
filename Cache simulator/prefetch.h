@@ -12,43 +12,43 @@ class Prefetch : public RAM
 {
 private:
 	int size = prefetch_entry_num;			// Number of stored chunks
-	long int rules_num = rules_numer;		// Number of stored rules
+	long long rules_num = rules_numer;		// Number of stored rules
 
 public:
-	long int prefetched;
+	long long prefetched;
 
 	/* Buffer for storage history. 
 	Buffer size must be equel window_size
 	for sunc with prefetcher learning. */
-	vector<long int> buff;		
+	vector<long long> buff;		
 
 	/* Store rules.
 	Vector is rule where the last element is chuck for prefect.
-	Long int is support */
-	map < vector<long int>, long int> Rules;
+	long long is support */
+	map < vector<long long>, long long> Rules;
 
 	Prefetch();
 
 	/* LRU structure.
 	Append to the end, removed from the begining. */
-	void pustToBuff(long int addr);
+	void pustToBuff(long long addr);
 
 
 	/* If read is successfuly done return "1" 
 	 else "0" (in case chunk does not exist in prefetcher). */
-	bool read(long int addr);
+	bool read(long long addr);
 	
 
 	// With every request for read check rukes for prefetching
-	long int checkRules();
-	bool isRule(vector<long int> rule);
+	long long checkRules();
+	bool isRule(vector<long long> rule);
 
 	// Prefetch chunk "addr" (works like add and update)
-	long int prefetch (long int addr);
+	long long prefetch (long long addr);
 
 
 	/* Let's add rules there for limitation its numbers. */
-	void addRule(vector<long int> rule, long int importance);
+	void addRule(vector<long long> rule, long long importance);
 
-	void saveStatistics(long int lba_counter, string traceName);
+	void saveStatistics(long long lba_counter, string traceName);
 };

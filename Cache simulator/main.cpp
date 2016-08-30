@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <time.h>
+#include <vector>
 
 using namespace std;
 
@@ -15,28 +16,28 @@ Storage storage;
 Prefetch prefetcher;
 History history;
 
-long int lba_counter = 0;
-long int line_counter = 0;				// the total number for big_trace is 16721775 (count by my special programm)
+long long lba_counter = 0;
+long long line_counter = 0;				// the total number for big_trace is 16721775 (count by my special programm)
 
 
 /* Looking for number of chunk which includes given LBA address*/
-long int findNum(long int addr) {
+long long findNum(long long addr) {
 
 	return addr * (unsigned long int)lba_size / (unsigned long int)chunk_size / 1024;
 }
 
 /* Delete copies from RAM if this addr exists in prefetcher */
-void deleteCopy(long int addr)
+void deleteCopy(long long addr)
 {
 	if (cache.exist(addr))
 		cache.remove(addr);
 }
 
-void saveAllStatistics()
+void saveAllStatistics(string trace_name)
 {
-	storage.saveStatistics(lba_counter, "statistics.txt");
-	cache.saveStatistics(lba_counter, "statistics.txt");
-	prefetcher.saveStatistics(lba_counter, "statistics.txt");
+	storage.saveStatistics(lba_counter, trace_name);
+	cache.saveStatistics(lba_counter, trace_name);
+	prefetcher.saveStatistics(lba_counter, trace_name);
 }
 void cleanAllStatistics()
 {
@@ -46,12 +47,14 @@ void cleanAllStatistics()
 }
 
 /* Processing one chunk "ch" with RAM and storage.*/
-bool stepLearn(long int ch, string action)
+bool stepLearn(long long ch, string action)
 {
-	if (action == "r" && !cache.read(ch))		// if request for read and chunk 'ch' doesn't exist in cache
+	if (action == "r")		// if request for read and chunk 'ch' doesn't exist in cache
 	{
-		storage.read(ch);							// then read from storage
-		history.push_back(ch);						// and fill read heastory
+		history.push_back(ch);
+		
+		if (!cache.read(ch))// then read from storage
+			storage.read(ch);						// and fill read heastory
 	}
 
 	if (action == "w")							// if request for write
@@ -67,7 +70,7 @@ bool stepLearn(long int ch, string action)
 }
 
 /* Processing one chunk "ch" with prefetcher, RAM and storage.*/
-void stepPrefRamStor(long int ch, string action)
+void stepPrefRamStor(long long ch, string action)
 {
 	if (action == "r" && !prefetcher.read(ch)) // if request for read and chunk 'ch' doesn't exist in prefetcher
 	{
@@ -93,8 +96,9 @@ void processing(string trace_name)
 
 	char buff[20];						// buffer for reading data about request
 
-	long int lba;
-	long int size;
+	long long lba;
+	long long size;
+	string type;
 	string action;
 
 	while (!trace.eof())
@@ -102,15 +106,22 @@ void processing(string trace_name)
 		line_counter++;					// TEST LINE
 
 		trace >> buff;					// Read LBA from trace
-		lba = atoi(buff);				// Convert into the number
+		lba = atoll(buff);				// Convert into the number
 
 		trace >> buff;					// Read size of requested data
-		size = atoi(buff);				// Convert into the number
+		size = atoll(buff);				// Convert into the number
 
 		trace >> buff;					// Read action with data : read/write
 		action = buff;
 
-		trace >> buff;					// Read incoming time (haven't used)
+		// new line
+		trace >> buff;
+		type = buff;
+
+		trace >> buff;					// Read incoming time (haven't used)	
+
+		if (type == "S")
+			continue;
 		
 		lba_counter++;
 
@@ -124,18 +135,21 @@ void processing(string trace_name)
 		}
 		
 	}
+	storage.saveStatistics(lba_counter, trace_name);
+	cache.saveStatistics(lba_counter, trace_name);
+
 	trace.close();
 }
 
 /* Learning prefetcher on trace */ 
 void processWithLearning(string trace_name)
 {
-	ifstream trace("final_trace_handled_SR_5sec_NEW");
+	ifstream trace(trace_name);
 
 	char buff[20];						// buffer for reading data about request
 
-	long int lba;
-	long int size;
+	long long lba;
+	long long size;
 	string action;
 	string type;
 
@@ -146,10 +160,10 @@ void processWithLearning(string trace_name)
 		line_counter++;					// TEST LINE
 
 		trace >> buff;					// Read LBA from trace
-		lba = atoi(buff);				// Convert into the number
+		lba = atoll(buff);				// Convert into the number
 
 		trace >> buff;					// Read size of requested data
-		size = atoi(buff);				// Convert into the number
+		size = atoll(buff);				// Convert into the number
 
 		trace >> buff;					// Read action with data : read/write
 		action = buff;					
@@ -183,30 +197,34 @@ void processWithLearning(string trace_name)
 			endOfTrace = true;			// For finish while()
 		}
 	}
+	storage.saveStatistics(lba_counter, trace_name);
+	cache.saveStatistics(lba_counter, trace_name);
+
 }
 
 // without learning
 void processWithPrefetcher(string trace_name)
 {
 
-	ifstream trace("final_trace_handled_SR_5sec_NEW");
+	ifstream trace(trace_name);
 
 	char buff[20];						// buffer for reading data about request
 
-	long int lba;
-	long int size;
+	long long lba;
+	long long size;
 	string action;
 	string type;
 
 	while (!trace.eof())
 	{
 		line_counter++;					// TEST LINE
+		cout << line_counter << endl;
 
 		trace >> buff;					// Read LBA from trace
-		lba = atoi(buff);				// Convert into the number
+		lba = atoll(buff);				// Convert into the number
 
 		trace >> buff;					// Read size of requested data
-		size = atoi(buff);				// Convert into the number
+		size = atoll(buff);				// Convert into the number
 
 		trace >> buff;					// Read action with data : read/write
 		action = buff;
@@ -236,8 +254,8 @@ the second is process with prefetcher.*/
 //
 //	char buff[20];						// buffer for input data
 //
-//	long int lba;
-//	long int size;
+//	long long lba;
+//	long long size;
 //	string action;		// read or write
 //	string type;		// sequentual or random
 //
@@ -248,10 +266,10 @@ the second is process with prefetcher.*/
 //		line_counter++;					// TEST LINE
 //
 //		trace >> buff;					// Read LBA from trace
-//		lba = atoi(buff);				// Convert into the number
+//		lba = atoll(buff);				// Convert into the number
 //
 //		trace >> buff;					// Read size of requested data
-//		size = atoi(buff);				// Convert into the number
+//		size = atoll(buff);				// Convert into the number
 //
 //		trace >> buff;					// Read action with data : read/write
 //		action = buff;
@@ -313,7 +331,7 @@ void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 
 	/* Update statistics after change modes.
 	Print statistics after learning and delete.*/
-	saveAllStatistics();
+	//saveAllStatistics(trace_name1);
 	cleanAllStatistics();
 	
 	time_t time2;
@@ -331,18 +349,79 @@ void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 	//cout << "Wasted for processing: " << ctime(&time3) - ctime(&time2) << endl;
 
 	//printing statistic 
-	saveAllStatistics();
+	saveAllStatistics(trace_name2);
 }
 
+/*Fill cache rules from file*/
+void fillRules(string rules_file)
+{
+	fstream rules(rules_file);
+	string buff;
+	string::size_type sz = 0;
+	vector <long long> new_rule;
 
-long int main() 
+	while (!rules.eof())
+	{
+		rules >> buff;
+		while (buff != "=>" && !rules.eof())
+		{
+			new_rule.push_back(stoll(buff, &sz, 10));
+			rules >> buff;
+		}
+		rules >> buff;
+		new_rule.push_back(stoll(buff, &sz, 10));
+
+		int supp = 0;
+		rules >> buff;
+		while (buff != ")" && !rules.eof())
+		{
+			if (buff == "=")
+			{	
+				rules >> buff;
+				supp = stoll(buff, &sz, 10);
+				//cout << supp << endl;
+				break;
+			}
+			rules >> buff;
+		}
+		prefetcher.addRule(new_rule, supp);
+		new_rule.clear();
+	}
+}
+
+void proc(string trace_name)
+{
+
+
+	time_t time2;
+	time(&time2);
+	cout << "Now: " << ctime(&time2) << endl;
+	//cout << "Wasted for learning: " << ctime(&time2) - ctime(&time1) << endl;
+
+	cache.cleanAndResize(RAM_entry_num);
+	fillRules("rules.txt");
+	processWithPrefetcher(trace_name);
+
+
+	time_t time3;
+	time(&time3);
+	cout << "Now: " << ctime(&time3) << endl;
+	//cout << "Wasted for processing: " << ctime(&time3) - ctime(&time2) << endl;
+
+	//printing statistic 
+	saveAllStatistics(trace_name);
+}
+
+int main() 
 {
 
 
 	//string traceROSTELECOM = "\"C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW\"";
-	string traceROSTELECOM = "final_trace_handled_SR_5sec_NEW";
-	processingLearnAndPrefetch2(traceROSTELECOM, traceROSTELECOM);
-
+	string traceROSTELECOM ="Rostelecom_5(2)";
+	//"final_trace_handled_SR_5sec_NEW";
+	//processingLearnAndPrefetch2(traceROSTELECOM, traceROSTELECOM);
+	//fillRules("rules.txt");
+	proc(traceROSTELECOM);
 	system("PAUSE");
 	return 0;
 }

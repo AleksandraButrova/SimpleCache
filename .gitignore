@@ -96,3 +96,6 @@ Debug/Cache simulator.pdb
 Cache simulator/x64/Debug/vc140.pdb
 *.pdb
 Cache simulator.VC.VC.opendb
+Cache simulator/Cache Simulator/.vs/Cache Simulator/v14/.suo
+*.enc
+Cache simulator/Cache Simulator/Cache Simulator/final_trace_handled_SR_5sec_NEW

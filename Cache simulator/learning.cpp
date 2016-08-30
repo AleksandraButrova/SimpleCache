@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void History::push_back(long int num)
+void History::push_back(long long num)
 {
 	if (pos != window_size) {
 
@@ -15,19 +15,19 @@ void History::push_back(long int num)
 	{
 		size++;
 		pos = 1;
-		vector<long int> w;
+		vector<long long> w;
 		w.push_back(num);
 		item.push_back(w);
 	}
 }
 
 
-void apriori(vector<vector<long int>> history, char *output_filename, map < vector<long int>, long int> &Rules)
+void apriori(vector<vector<long long>> history, char *output_filename, map < vector<long long>, long long> &Rules)
 {
-	//vector<vector<long int>, long int > SetSupport;
+	//vector<vector<long long>, long long> SetSupport;
 
 	// generate L1
-	map <vector<long int>, long int> L;
+	map <vector<long long>, long long> L;
 	L = makeL1(history);
 
 	while (L.size())
@@ -41,57 +41,95 @@ void apriori(vector<vector<long int>> history, char *output_filename, map < vect
 }
 
 // Generate singelon sequences with their support from history
-map <vector<long int>, long int> makeL1(vector<vector<long int>> history)
+map <vector<long long>, long long> makeL1(vector<vector<long long>> history)
 {
-	map <vector<long int>, long int> L1;
+	map <vector<long long>, pair <long long, int>> L1;
+
+	map <vector<long long>, long long> res;
+
+	int window_num = 0;
 
 	for (auto it1 = history.begin(); it1 != history.end() - 1; ++it1)
 	{
 		for (auto it2 = it1->begin(); it2 != it1->end(); ++it2)
 		{
-			vector<long int> temp;
+			vector<long long> temp;
 			temp.push_back(*it2);
 
 			auto iter = L1.find(temp);
 
 			// if this sequential is not exist add it with support 1
-			if ( iter == L1.end())
-				L1.emplace(temp, 1);
+			if (iter == L1.end())
+			{
+				pair <long long, int> supp_win(1, window_num);
+				L1.emplace(temp, supp_win);
+			}
 			// if exist then increment support
 			else
-				L1.at(temp) = iter->second + 1;
-
+				if (iter->second.second != window_num)
+				{
+					L1.at(temp).first = iter->second.first + 1;
+					L1.at(temp).second = window_num;
+				}
+			}
+		window_num++;
 		}
-	}
-
-	// delete sequential with support less min_supp
-	for (auto it = L1.begin(); it != L1.end(); )
-	{
-		if (it->second < min_supp)
-		{
-			auto it2 = it;
-			it++;
-			L1.erase(it2);
-		}
-		else
-			it++;
-	}
+		
 	
 
-	return L1;
+	// delete sequential with support less min_supp
+	for (auto it = L1.begin(); it != L1.end(); it++)
+	{
+		if (it->second.first >= min_supp)
+			res.emplace(it->first, it->second.first);
+
+	}
+	
+	deleteUnfrequentFromHistory(history, res);
+	return res;
+}
+
+void deleteUnfrequentFromHistory(vector<vector<long long>> &history, map <vector<long long>, long long> L1)
+{
+	for (auto it1 = history.begin(); it1 != history.end(); ++it1)
+	{
+		bool changed = false;
+		vector <long long> changedWindow;
+		changedWindow.clear();
+
+		for (auto it2 = it1->begin(); it2 != it1->end(); ++it2)
+		{
+			vector <long long> temp;
+			temp.push_back(*it2);
+
+
+			if (L1.find(temp) != L1.end())
+				changedWindow.push_back(*it2);
+			else
+				changed = true;		
+		}
+
+		if (changed == true)
+		{
+			*it1 = changedWindow;
+			changed = false;
+		}
+
+	}
+	return;
 }
 
 
 // Scan history and find frequent sequences in that, then return this set
-map <vector<long int>, long int> scanHistory(vector<vector<long int>> history, vector<vector<long int>> Ck, map <vector<long int>, long int> L)
+map <vector<long long>, long long> scanHistory(vector<vector<long long>> history, vector<vector<long long>> Ck, map <vector<long long>, long long> L)
 {
-	map <vector<long int>, long int> SeqSet;
+	map <vector<long long>, long long> SeqSet;
 
 	for (auto iter = Ck.begin(); iter != Ck.end(); ++iter)
 	{
 		// check it is a frequent seq
-		long int seq_supp = calSupport(history, *iter);
-		if (seq_supp >= min_supp)
+		long long seq_supp = calSupport(history, *iter);
+		if (seq_supp >= min_supp) 
 		{
 			SeqSet.emplace(*iter, seq_supp);
 		}
@@ -100,9 +138,9 @@ map <vector<long int>, long int> scanHistory(vector<vector<long int>> history, v
 }
 
 // for each window in history it counts sequence support
-long int calSupport(vector<vector<long int>> history, vector<long int> seq)
+long long calSupport(vector<vector<long long>> history, vector<long long> seq)
 {
-	long int seq_supp = 0;
+	long long seq_supp = 0;
 
 	for (auto it1 = history.begin(); it1 != history.end(); ++it1)
 		if (isSupport(*it1, seq))
@@ -115,7 +153,7 @@ long int calSupport(vector<vector<long int>> history, vector<long int> seq)
 /* For each item in seq run trought one input window.
 If we find a match we countinue run from found window's item to window's end
 and loking for next seq number*/
-bool isSupport(vector<long int> hwindow, vector<long int> seq)
+bool isSupport(vector<long long> hwindow, vector<long long> seq)
 {
 	auto it_window = hwindow.begin();
 	auto it_seq = seq.begin();
@@ -138,23 +176,23 @@ bool isSupport(vector<long int> hwindow, vector<long int> seq)
 }
 
 // generate Ck (candidate) from Lk-1
-vector<vector<long int>> generateCk(map <vector<long int>, long int> &L, vector<vector<long int>> history)
+vector<vector<long long>> generateCk(map <vector<long long>, long long> &L, vector<vector<long long>> history)
 {
-	vector<vector<long int>> ret;
+	vector<vector<long long>> ret;
 
 	for (auto it1 = L.begin(); it1 != L.end(); ++it1)								
 	{
 		for (auto it2 = L.begin(); it2 != L.end(); ++it2)							
 		{
-			vector<long int> seq1((*it1).first.begin(), --(*it1).first.end())
+			vector<long long> seq1((*it1).first.begin(), --(*it1).first.end())
 				, seq2((*it2).first.begin(), --(*it2).first.end());
 
-			long int n1 = *(--(*it1).first.end())
+			long long n1 = *(--(*it1).first.end())
 				, n2 = *(--(*it2).first.end());
 
 			if (seq1 == seq2 && n1 != n2)
 			{
-				vector<long int> temp = it1->first;
+				vector<long long> temp = it1->first;
 				temp.push_back(n2);
 
 				if (!hasInfrequent(temp, L))
@@ -166,9 +204,9 @@ vector<vector<long int>> generateCk(map <vector<long int>, long int> &L, vector<
 }
 
 // check there is any subseq in this seq is not a frequet seq
-bool hasInfrequent(vector<long int> seq, map <vector<long int>, long int> &L)//, map <vector<long int>, long int> &L)
+bool hasInfrequent(vector<long long> seq, map <vector<long long>, long long> &L)//, map <vector<long long>, long long> &L)
 {
-	vector<vector<long int>> Subseq = genSubseq(seq);
+	vector<vector<long long>> Subseq = genSubseq(seq);
 
 	/* Scan frequent set L.
 	if at least one member does not exist at L
@@ -176,28 +214,28 @@ bool hasInfrequent(vector<long int> seq, map <vector<long int>, long int> &L)//,
 	so seq also is unfrequent*/
 	for (auto it = Subseq.begin(); it != Subseq.end(); ++it)
 	{
-		if (L.find(*it) == L.end())
+		if (*it != seq && L.find(*it) == L.end())
 			return true;
 	}
 	return false;
 }
 
 // generate all subset
-vector<vector<long int>> genSubseq(vector<long int> seq)
+vector<vector<long long>> genSubseq(vector<long long> seq)
 {
-	vector<vector<long int>> Subseqs;
+	vector<vector<long long>> Subseqs;
 	Subseqs.push_back(seq);
 
 	for (unsigned int i = 0; i < seq.size(); i++)
 	{
-		vector<long int> new_last;
+		vector<long long> new_last;
 		new_last.push_back(seq[i]);
 		Subseqs.push_back(new_last);
 		genRecursion(i, seq, new_last, Subseqs);
 	}
 	return Subseqs;
 }
-int genRecursion(int n, vector<long int> seq, vector<long int> last, vector<vector<long int>> &Subseqs)
+int genRecursion(int n, vector<long long> seq, vector<long long> last, vector<vector<long long>> &Subseqs)
 {
 	for (int i = n + 1;; i++)
 	{
@@ -205,7 +243,7 @@ int genRecursion(int n, vector<long int> seq, vector<long int> last, vector<vect
 			return 0;
 		else
 		{
-			vector<long int> new_last = last;
+			vector<long long> new_last = last;
 			new_last.push_back(seq[i]);
 			Subseqs.push_back(new_last);
 			genRecursion(i, seq, new_last, Subseqs);
@@ -215,14 +253,14 @@ int genRecursion(int n, vector<long int> seq, vector<long int> last, vector<vect
 }
 
 // show all rules
-void showRule(map< vector<long int>, long int > &L, char *output_filename)
+void showRule(map< vector<long long>, long long> &L, char *output_filename)
 {
 	fstream fout(output_filename, ios_base::app);
 
 	// print rules by line
 	for (auto iter = L.begin(); iter != L.end(); ++iter)
 	{
-		long int s = (iter->first).size();
+		long long s = (iter->first).size();
 		
 		if (s == 1)
 			continue;
@@ -243,13 +281,13 @@ void showRule(map< vector<long int>, long int > &L, char *output_filename)
 }
 
 // save rules to prefetcher with their support as importance of rule
-void saveRules(map< vector<long int>, long int > &L, map< vector<long int>, long int > &Rules)
+void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, long long> &Rules)
 {
 	for (auto iter = L.begin(); iter != L.end(); ++iter)
 		Rules.emplace(iter->first, iter->second);
 }
 
-void printRules(map< vector<long int>, long int > &Rules, char *output_filename)
+void printRules(map< vector<long long>, long long> &Rules, char *output_filename)
 {
 	fstream fout(output_filename, ios_base::app);
 

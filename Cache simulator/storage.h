@@ -7,14 +7,14 @@ but some methods are needed to be.*/
 class Storage{
 	 // here may be data 
 public:
-	long int requests_counter;
-	long int read_counter;
+	long long requests_counter;
+	long long read_counter;
 
 	Storage();
 
-	void write(long int addr);							//	It writes data on disks.
-	void read(long int addr);							//	It reads data from desks. 
-	void printStatistics(long int lba_counter);		//	It prints miss counter and request counter on console.
+	void write(long long addr);							//	It writes data on disks.
+	void read(long long addr);							//	It reads data from desks. 
+	void printStatistics(long long lba_counter);		//	It prints miss counter and request counter on console.
 	void cleanStatistics();
-	void saveStatistics(long int lba_counter, string traceName);
+	void saveStatistics(long long lba_counter, string traceName);
  };

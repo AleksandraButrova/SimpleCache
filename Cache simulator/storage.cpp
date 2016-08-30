@@ -7,22 +7,21 @@ using namespace std;
 
 Storage::Storage()
 {
-	read_counter = 0;
-	requests_counter = 0;
+	read_counter = 1;
+	requests_counter = 1;
 }
-
-void Storage::read(long int addr)
+void Storage::read(long long addr)
 {
 	read_counter++;
 	requests_counter++;
 }
 
-void Storage::write(long int addr)
+void Storage::write(long long addr)
 {
 	requests_counter++;
 }
 
-void Storage::printStatistics(long int lba_counter)
+void Storage::printStatistics(long long lba_counter)
 {	
 	cout << "================================\nStorage statistics.";
 	cout << "\n================================\n\n";
@@ -44,7 +43,7 @@ void Storage::cleanStatistics()
 	read_counter = 0;
 }
 
-void Storage::saveStatistics(long int lba_counter, string traceName)
+void Storage::saveStatistics(long long lba_counter, string traceName)
 {
 	fstream fout("statistics.txt", ios_base::app);
 	fout << "================================\nStorage.\nStatistics of "<<traceName.c_str();
