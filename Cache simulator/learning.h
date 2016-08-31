@@ -37,7 +37,7 @@ long long calSupport(vector<vector<long long>> history, vector<long long> seq);
 
 bool isSupport(vector<long long> hwindow, vector<long long> seq);
 
-vector<vector<long long>> generateCk(map <vector<long long>, long long> &L, vector<vector<long long>> history);
+vector<vector<long long>> generateCk(int k, map <vector<long long>, long long> &L, vector<vector<long long>> history);
 
 bool hasInfrequent(vector<long long> seq, map <vector<long long>, long long> &L);
 //,map <vector<long long>, long long> &L);

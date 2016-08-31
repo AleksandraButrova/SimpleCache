@@ -29,15 +29,16 @@ void apriori(vector<vector<long long>> history, char *output_filename, map < vec
 	// generate L1
 	map <vector<long long>, long long> L;
 	L = makeL1(history);
-
+	int k = 2;				// iteration number
 	while (L.size())
 	{
-		L = scanHistory(history, generateCk(L, history), L);
+		L = scanHistory(history, generateCk(k, L, history), L);
 		cout << "Hey rules!" << endl;
 		saveRules(L, Rules);
 		showRule(L, output_filename);
+		k++;
 	}
-	printRules(Rules, output_filename);
+	//printRules(Rules, output_filename);
 }
 
 // Generate singelon sequences with their support from history
@@ -80,7 +81,7 @@ map <vector<long long>, long long> makeL1(vector<vector<long long>> history)
 	// delete sequential with support less min_supp
 	for (auto it = L1.begin(); it != L1.end(); it++)
 	{
-		if (it->second.first >= min_supp)
+		if (it->second.first >= 20)//min_supp) // !!!!
 			res.emplace(it->first, it->second.first);
 
 	}
@@ -116,6 +117,7 @@ void deleteUnfrequentFromHistory(vector<vector<long long>> &history, map <vector
 		}
 
 	}
+	cout<<history.size();
 	return;
 }
 
@@ -176,7 +178,7 @@ bool isSupport(vector<long long> hwindow, vector<long long> seq)
 }
 
 // generate Ck (candidate) from Lk-1
-vector<vector<long long>> generateCk(map <vector<long long>, long long> &L, vector<vector<long long>> history)
+vector<vector<long long>> generateCk(int k, map <vector<long long>, long long> &L, vector<vector<long long>> history)
 {
 	vector<vector<long long>> ret;
 
@@ -195,7 +197,9 @@ vector<vector<long long>> generateCk(map <vector<long long>, long long> &L, vect
 				vector<long long> temp = it1->first;
 				temp.push_back(n2);
 
-				if (!hasInfrequent(temp, L))
+				if (k == 2)
+					ret.push_back(temp);
+				if (k > 2 && !hasInfrequent(temp, L))
 					ret.push_back(temp);
 			}
 		}

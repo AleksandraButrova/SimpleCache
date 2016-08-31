@@ -49,22 +49,11 @@ void cleanAllStatistics()
 /* Processing one chunk "ch" with RAM and storage.*/
 bool stepLearn(long long ch, string action)
 {
-	if (action == "r")		// if request for read and chunk 'ch' doesn't exist in cache
-	{
-		history.push_back(ch);
+	history.push_back(ch);
 		
-		if (!cache.read(ch))// then read from storage
+		if (!cache.read(ch))						// then read from storage
 			storage.read(ch);						// and fill read heastory
-	}
-
-	if (action == "w")							// if request for write
-	{
-		cache.write(ch);							// then just write in cache and in storage 
-		storage.write(ch);
-	}
-	// Learning control
-	//if (history.size >= learning_lim)
-	//	return 0;
+	
 
 	return 1;
 }
@@ -72,19 +61,9 @@ bool stepLearn(long long ch, string action)
 /* Processing one chunk "ch" with prefetcher, RAM and storage.*/
 void stepPrefRamStor(long long ch, string action)
 {
-	if (action == "r" && !prefetcher.read(ch)) // if request for read and chunk 'ch' doesn't exist in prefetcher
-	{
-
-		if (!cache.read(ch))		// then read from cache
+	if (!cache.read(ch))		// then read from cache
 			storage.read(ch);		// and if it is impossible then read from storage
-	}
-
-	if (action == "w")
-	{
-		storage.write(ch);
-		cache.write(ch);
-		prefetcher.write(ch);
-	}
+	
 
 }
 
@@ -99,11 +78,13 @@ void processing(string trace_name)
 	long long lba;
 	long long size;
 	string type;
-	string action;
+	string action = "";
 
 	while (!trace.eof())
 	{
 		line_counter++;					// TEST LINE
+
+		trace >> buff;					// volum name, useless
 
 		trace >> buff;					// Read LBA from trace
 		lba = atoll(buff);				// Convert into the number
@@ -111,17 +92,19 @@ void processing(string trace_name)
 		trace >> buff;					// Read size of requested data
 		size = atoll(buff);				// Convert into the number
 
-		trace >> buff;					// Read action with data : read/write
-		action = buff;
+		trace >> buff;					// meta, useless
+		trace >> buff;					// stast time, useless
+		trace >> buff;					// finish time, useless
 
-		// new line
 		trace >> buff;
 		type = buff;
 
-		trace >> buff;					// Read incoming time (haven't used)	
+
+		if (line_counter % 1000000 == 0)
+			cout << line_counter << "\t" << lba_counter << endl;
 
 		if (type == "S")
-			continue;
+			continue;;
 		
 		lba_counter++;
 
@@ -146,18 +129,23 @@ void processWithLearning(string trace_name)
 {
 	ifstream trace(trace_name);
 
-	char buff[20];						// buffer for reading data about request
+	char buff[100];						// buffer for reading data about request
 
 	long long lba;
 	long long size;
-	string action;
+	string action = "";
 	string type;
 
 	bool endOfTrace = trace.eof();
 
+	trace.getline(buff, 100);			///useless string
+	/*volume_name	lba	len	meta	start_time	end_time	R
+LUN04	2225205317	16	1	1463660529.065354	1463660529.066004	S*/
 	while (!endOfTrace)
 	{
 		line_counter++;					// TEST LINE
+
+		trace >> buff;					// volum name, useless
 
 		trace >> buff;					// Read LBA from trace
 		lba = atoll(buff);				// Convert into the number
@@ -165,14 +153,13 @@ void processWithLearning(string trace_name)
 		trace >> buff;					// Read size of requested data
 		size = atoll(buff);				// Convert into the number
 
-		trace >> buff;					// Read action with data : read/write
-		action = buff;					
+		trace >> buff;					// meta, useless
+		trace >> buff;					// stast time, useless
+		trace >> buff;					// finish time, useless
 
-		// new line
 		trace >> buff;
 		type = buff;
 
-		trace >> buff;					// Read incoming time (haven't used)
 		
 		if (line_counter % 1000000 == 0)
 			cout << line_counter <<"\t" << lba_counter << endl;
@@ -192,7 +179,7 @@ void processWithLearning(string trace_name)
 		{
 			trace.close();
 			cout << "History is full." << endl;
-			cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl;
+			cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl << endl;
 			apriori(history.item, "rules.txt", prefetcher.Rules);
 			endOfTrace = true;			// For finish while()
 		}
@@ -212,13 +199,14 @@ void processWithPrefetcher(string trace_name)
 
 	long long lba;
 	long long size;
-	string action;
+	string action = "";
 	string type;
 
 	while (!trace.eof())
 	{
 		line_counter++;					// TEST LINE
-		cout << line_counter << endl;
+
+		trace >> buff;					// volum name, useless
 
 		trace >> buff;					// Read LBA from trace
 		lba = atoll(buff);				// Convert into the number
@@ -226,14 +214,16 @@ void processWithPrefetcher(string trace_name)
 		trace >> buff;					// Read size of requested data
 		size = atoll(buff);				// Convert into the number
 
-		trace >> buff;					// Read action with data : read/write
-		action = buff;
+		trace >> buff;					// meta, useless
+		trace >> buff;					// stast time, useless
+		trace >> buff;					// finish time, useless
 
-		// new line
 		trace >> buff;
 		type = buff;
 
-		trace >> buff;					// Read incoming time (haven't used)	
+
+		if (line_counter % 1000000 == 0)
+			cout << line_counter << "\t" << lba_counter << endl;
 
 		if (type == "S")
 			continue;
@@ -418,10 +408,11 @@ int main()
 
 	//string traceROSTELECOM = "\"C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW\"";
 	string traceROSTELECOM ="Rostelecom_5(2)";
+	string traceROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5";
 	//"final_trace_handled_SR_5sec_NEW";
-	//processingLearnAndPrefetch2(traceROSTELECOM, traceROSTELECOM);
+	processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
 	//fillRules("rules.txt");
-	proc(traceROSTELECOM);
+	//proc(traceROSTELECOM);
 	system("PAUSE");
 	return 0;
 }
