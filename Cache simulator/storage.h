@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 using namespace std;
 /* Class Storage discribe data on disks.
@@ -9,6 +10,8 @@ class Storage{
 public:
 	long long requests_counter;
 	long long read_counter;
+
+	vector <long long> reqs;
 
 	Storage();
 

@@ -24,6 +24,8 @@ public:
 	long long missCounter;
 	long long wrongAdd;
 
+	vector <long long> reads, misses, wrongs;
+
 	int size;
 	long long filled;												// It is number of enmtry. It mustn't be exceed RAM_size from param.h	
 			
@@ -39,7 +41,7 @@ public:
 	RAM();
 	
 	void evict();
-	void add(long long num);
+	void add(long long num, bool used);
 	void update(long long num);
 
 	bool read(long long addr);

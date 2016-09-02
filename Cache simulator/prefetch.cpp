@@ -7,11 +7,13 @@ using namespace std;
 
 Prefetch::Prefetch()
 {
-	filled = 0;
-	missCounter = 0;
-	readReq = 0;
-	writeReq = 0;
-	wrongAdd = 0;
+	size = prefetch_entry_num;
+	filled = 1;
+	missCounter = 1;
+	readReq = 1;
+	writeReq = 1;
+	wrongAdd = 1;
+	prefetched = 1;
 }
 
 void Prefetch::pustToBuff(long long addr)
@@ -44,7 +46,6 @@ bool Prefetch::read(long long addr)
 
 long long Prefetch::checkRules()
 {
-	long long prefetched = 0;
 
 	//cout << "\nCheck...\n";
 	for (auto rules_iter = Rules.begin(); rules_iter != Rules.end(); rules_iter++)
@@ -99,7 +100,7 @@ long long Prefetch::prefetch(long long addr)
 	{
 		prefetched++;
 
-		add(addr);
+		add(addr, false);
 		return addr;
 	}
 
@@ -119,16 +120,40 @@ void Prefetch::addRule(vector<long long> rule, long long importance)
 void Prefetch::saveStatistics(long long lba_counter, string traceName)
 {
 	fstream fout("statistics.txt", ios_base::app);
-	fout << "================================\nPrefetcher.\nStatistics of " << traceName.c_str();
+	fout << "================================\n";
+	fout << "================================\n";
+	fout<<"PREFETCHER\n";
 	fout << "\n================================\n\n";
 
-	fout << "Amount of requests = " << lba_counter << endl;
-	fout << "# requests  = " << readReq + writeReq << endl;
-	fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
+	//fout << "Amount of requests = " << lba_counter << endl;
+	fout <</* "# requests  = " <<*/ readReq + writeReq << endl;
+	//fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout << "# prefetcher miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
-	fout << "# prefetcher hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+	fout <</* "# prefetcher miss  = " << */missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
+	fout << /*"# prefetcher hit  = " <<*/ readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
 
-	fout << "# Wrong prefetched = "<< wrongAdd <<"  (" << 100 * wrongAdd / prefetched << " %)\n";
-	fout << "Accuracy = " << 100 - 100 * wrongAdd / prefetched << " %\n";
+	fout << /*"# Wrong prefetched = "<<*/ wrongAdd <<"  (" << 100 * wrongAdd / prefetched << " %)\n";
+	fout << /*"Accuracy = " <<*/ 100 - 100 * wrongAdd / prefetched << " %\n";
+
+	reads.push_back(readReq);
+	misses.push_back(missCounter);
+	wrongs.push_back(wrongAdd);
+	prefetchs.push_back(prefetched);
+}
+
+void Prefetch::cleanAndResize(int new_size)
+{
+	size = new_size;
+
+	filled = 1;
+	missCounter = 1;
+	readReq = 1;
+	writeReq = 1;
+	wrongAdd = 1;
+	prefetched = 1;
+
+
+	LRU.clear();
+	HashTable.clear();
+	buff.clear();
 }

@@ -33,7 +33,8 @@ void RAM::evict(){
 	filled--;
 }
 
-void RAM::add(long long num){
+void RAM::add(long long num, bool used)
+{
 	Chunk *temp = new Chunk(num);
 	
 	if (filled >= size ) 	
@@ -44,7 +45,7 @@ void RAM::add(long long num){
 
 	LRU.push_front(temp);
 	
-	pair< list<Chunk*>::iterator, bool > p(LRU.begin(), false);
+	pair< list<Chunk*>::iterator, bool > p(LRU.begin(), used);
 	HashTable.emplace(num, p);
 	
 	filled++;
@@ -62,7 +63,7 @@ void RAM::update(long long num){
 
 	filled--;
 
-	add(num);	
+	add(num, true);	
 	
 	//cout<<"UPDATE\n";	
 }
@@ -86,7 +87,7 @@ bool RAM::read(long long addr)
 	{
 		missCounter++;
 
-		add(addr);									// else add and write
+		add(addr, false);									// else add and write
 		Storage::write(addr);
 	}
 	return 0;
@@ -120,15 +121,21 @@ void RAM::remove(long long addr)
 void RAM::saveStatistics(long long lba_counter, string traceName)
 {
 	fstream fout("statistics.txt", ios_base::app);
-	fout << "================================\nRAM.\nStatistics of " << traceName.c_str();
-	fout << "\n================================\n\n";
+	fout << "================================\n";
+	fout << "================================\n";
+	fout << "RAM\n";
+	fout << "================================\n";
 
-	fout << "Amount of requests = " << lba_counter << endl;
-	fout << "# requests  = " << readReq + writeReq << endl;
-	fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
+	//fout << "Amount of requests = " << lba_counter << endl;
+	fout <</* "# requests  = " <<*/ readReq + writeReq << endl;
+	//fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout << "# cache miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
-	fout << "# cache hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+	fout <</* "# cache miss  = " <<*/ missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
+	fout << /*"# cache hit  = " <<*/ readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+
+	reads.push_back(readReq);
+	misses.push_back(missCounter);
+	wrongs.push_back(wrongAdd);
 }
 
 
@@ -138,6 +145,8 @@ void RAM::cleanAndResize(int new_size)
 
 	filled = 0;
 	missCounter = 0;
+	readReq = 0;
+
 	LRU.clear();
 	HashTable.clear();
 

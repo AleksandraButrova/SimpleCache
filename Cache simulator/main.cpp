@@ -16,8 +16,7 @@ Storage storage;
 Prefetch prefetcher;
 History history;
 
-long long lba_counter = 0;
-long long line_counter = 0;				// the total number for big_trace is 16721775 (count by my special programm)
+			// the total number for big_trace is 16721775 (count by my special programm)
 
 
 /* Looking for number of chunk which includes given LBA address*/
@@ -33,12 +32,35 @@ void deleteCopy(long long addr)
 		cache.remove(addr);
 }
 
-void saveAllStatistics(string trace_name)
+void saveAllStatistics(long long lba_counter, string trace_name)
 {
 	storage.saveStatistics(lba_counter, trace_name);
 	cache.saveStatistics(lba_counter, trace_name);
 	prefetcher.saveStatistics(lba_counter, trace_name);
 }
+
+void saveStatisticsSet(int percent, long long lba_counter, string stat_name)
+{
+	fstream fout(stat_name, ios_base::app);
+
+	
+	fout << lba_counter << ", ";
+	fout << percent << ", ";
+	fout << storage.read_counter << ", ";
+	fout << cache.readReq << ", ";
+	fout << cache.missCounter << ", ";
+	fout << cache.missCounter * 1.0 / cache.readReq << ", ";
+	fout << prefetcher.readReq << ", ";
+	fout << prefetcher.missCounter << ", ";
+	fout << prefetcher.missCounter * 1.0 / prefetcher.readReq << ", ";
+	fout << prefetcher.wrongAdd << ", ";
+	fout << prefetcher.wrongAdd * 1.0 / prefetcher.prefetched << ", ";
+	fout << prefetcher.prefetched << "\n";
+	
+	
+	fout.close();
+}
+
 void cleanAllStatistics()
 {
 	storage.cleanStatistics();
@@ -61,10 +83,14 @@ bool stepLearn(long long ch, string action)
 /* Processing one chunk "ch" with prefetcher, RAM and storage.*/
 void stepPrefRamStor(long long ch, string action)
 {
-	if (!cache.read(ch))		// then read from cache
-			storage.read(ch);		// and if it is impossible then read from storage
+	if (prefetcher.size != 0)
+		if (!prefetcher.read(ch))	// if request for read and chunk 'ch' doesn't exist in prefetcher
+			if (!cache.read(ch))		// then read from cache
+				storage.read(ch);		// and if it is impossible then read from storage
 	
-
+	if (prefetcher.size == 0)
+		if (!cache.read(ch))		// then read from cache
+			storage.read(ch);		// and if it is impossible then read from storage
 }
 
 /* One trace is processed one time
@@ -74,6 +100,9 @@ void processing(string trace_name)
 	ifstream trace(trace_name);
 
 	char buff[20];						// buffer for reading data about request
+
+	long long lba_counter = 0;
+	long long line_counter = 0;
 
 	long long lba;
 	long long size;
@@ -108,14 +137,10 @@ void processing(string trace_name)
 		
 		lba_counter++;
 
-		if (action == "r" && !cache.read(lba))
-			storage.read(lba);									
+		if (!cache.read(lba))		// then read from cache
+			storage.read(lba);		// and if it is impossible then read from storage
+
 		
-		if (action == "w")
-		{
-			cache.write(lba);
-			storage.write(lba);
-		}
 		
 	}
 	storage.saveStatistics(lba_counter, trace_name);
@@ -130,6 +155,9 @@ void processWithLearning(string trace_name)
 	ifstream trace(trace_name);
 
 	char buff[100];						// buffer for reading data about request
+
+	long long lba_counter = 0;
+	long long line_counter = 0;
 
 	long long lba;
 	long long size;
@@ -180,7 +208,7 @@ LUN04	2225205317	16	1	1463660529.065354	1463660529.066004	S*/
 			trace.close();
 			cout << "History is full." << endl;
 			cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl << endl;
-			apriori(history.item, "rules.txt", prefetcher.Rules);
+			apriori(history.item, "rules_w100_s250.txt", prefetcher.Rules);
 			endOfTrace = true;			// For finish while()
 		}
 	}
@@ -190,12 +218,15 @@ LUN04	2225205317	16	1	1463660529.065354	1463660529.066004	S*/
 }
 
 // without learning
-void processWithPrefetcher(string trace_name)
+long long processWithPrefetcher(string trace_name)
 {
 
 	ifstream trace(trace_name);
 
 	char buff[20];						// buffer for reading data about request
+
+	long long lba_counter = 0;
+	long long line_counter = 0;
 
 	long long lba;
 	long long size;
@@ -231,6 +262,7 @@ void processWithPrefetcher(string trace_name)
 		lba_counter++;
 		stepPrefRamStor(lba, action);
 	}
+	return lba_counter;
 }
 
 
@@ -330,7 +362,7 @@ void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 	//cout << "Wasted for learning: " << ctime(&time2) - ctime(&time1) << endl;
 	
 	cache.cleanAndResize(RAM_entry_num);
-	processWithPrefetcher(trace_name2);
+	long long lba_counter = processWithPrefetcher(trace_name2);
 	
 
 	time_t time3;
@@ -339,50 +371,62 @@ void processingLearnAndPrefetch2(string trace_name1, string trace_name2)
 	//cout << "Wasted for processing: " << ctime(&time3) - ctime(&time2) << endl;
 
 	//printing statistic 
-	saveAllStatistics(trace_name2);
+	saveAllStatistics(lba_counter, trace_name2);
 }
 
 /*Fill cache rules from file*/
 void fillRules(string rules_file)
 {
 	fstream rules(rules_file);
-	string buff;
+	char buff[32];
 	string::size_type sz = 0;
 	vector <long long> new_rule;
 
 	while (!rules.eof())
 	{
 		rules >> buff;
-		while (buff != "=>" && !rules.eof())
+		
+		while (buff[0] != '=' && buff[1] !='>' && !rules.eof())
 		{
 			new_rule.push_back(stoll(buff, &sz, 10));
 			rules >> buff;
 		}
 		rules >> buff;
-		new_rule.push_back(stoll(buff, &sz, 10));
+		for (int i = 0; i < sizeof(buff); i++)
+		{
+			if (buff[i] == ',')
+			{
+				buff[i] = '\0';
+				break;
+			}
+		}
+		if (buff[0] != '\0')
+			new_rule.push_back(stoll(buff, &sz, 10));
 
 		int supp = 0;
 		rules >> buff;
-		while (buff != ")" && !rules.eof())
-		{
-			if (buff == "=")
-			{	
-				rules >> buff;
-				supp = stoll(buff, &sz, 10);
-				//cout << supp << endl;
-				break;
-			}
-			rules >> buff;
-		}
+		supp = atoi(buff);
+		//rules >> buff;
+		//while (buff != ")" && !rules.eof())
+		//{
+		//	if (buff == "=")
+		//	{	
+		//		rules >> buff;
+		//		supp = stoll(buff, &sz, 10);
+		//		//cout << supp << endl;
+		//		break;
+		//	}
+		//	rules >> buff;
+		//}
 		prefetcher.addRule(new_rule, supp);
 		new_rule.clear();
 	}
 }
 
-void proc(string trace_name)
+void proc(string trace_name )
 {
 
-
+	cache.cleanAndResize(RAM_entry_num);
 	time_t time2;
 	time(&time2);
 	cout << "Now: " << ctime(&time2) << endl;
@@ -390,7 +434,7 @@ void proc(string trace_name)
 
 	cache.cleanAndResize(RAM_entry_num);
 	fillRules("rules.txt");
-	processWithPrefetcher(trace_name);
+	long long lba_counter = processWithPrefetcher(trace_name);
 
 
 	time_t time3;
@@ -399,18 +443,62 @@ void proc(string trace_name)
 	//cout << "Wasted for processing: " << ctime(&time3) - ctime(&time2) << endl;
 
 	//printing statistic 
-	saveAllStatistics(trace_name);
+	saveAllStatistics(lba_counter, trace_name);
 }
+// fixed rules
+void proc1(string tr1)
+{
+	fillRules("rules_40.txt");
 
+	int size = 1024;
+	string stat_name = "stat_(3)_s40_10per.csv";
+
+	fstream fout(stat_name, ios_base::app);
+	
+	fout << "all, ";
+	fout << "percent, ";
+	fout << "storage.reads, ";
+	fout << "cache.reads, ";
+	fout << "cache.miss, ";
+	fout << "cache.misses %, ";
+	fout << "prefetcher.reas, ";
+	fout << "prefetcher.misses, ";
+	fout << "prefetcher.misses %, ";
+	fout << "prefetcher.wrongAdd, ";
+	fout << "prefetcher.wrongAdd %, ";
+	fout << "prefetcher.prefetched\n";
+
+	fout.close();
+
+	for (int percent = 0; percent < 10; percent += 1)
+	{
+		time_t time2;
+		time(&time2);
+		cout << "Now: " << ctime(&time2) << endl;
+
+		storage.cleanStatistics();
+		cache.cleanAndResize(size * (100 - percent) * 0.01);
+		prefetcher.cleanAndResize(size * percent * 0.01);
+
+		long long lba_counter = processWithPrefetcher(tr1);
+		saveStatisticsSet(percent, lba_counter, stat_name);
+		
+	}
+
+}
 int main() 
 {
 
 
 	//string traceROSTELECOM = "\"C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW\"";
-	string traceROSTELECOM ="Rostelecom_5(2)";
-	string traceROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5";
+	string traceROSTELECOM ="Rostelecom_5";
+	string traceROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(3)";
 	//"final_trace_handled_SR_5sec_NEW";
-	processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
+	//processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
+	//processing(traceROSGOS);
+	proc1(traceROSGOS);
+	//cleanAllStatistics();
+	//proc(traceROSGOS);
 	//fillRules("rules.txt");
 	//proc(traceROSTELECOM);
 	system("PAUSE");

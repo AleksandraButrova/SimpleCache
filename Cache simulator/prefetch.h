@@ -11,12 +11,12 @@ using namespace std;
 class Prefetch : public RAM
 {
 private:
-	int size = prefetch_entry_num;			// Number of stored chunks
-	long long rules_num = rules_numer;		// Number of stored rules
+	//int size = prefetch_entry_num;			// Number of stored chunks
+	//long long rules_num = rules_numer;		// Number of stored rules
 
 public:
 	long long prefetched;
-
+	vector <long long> prefetchs;
 	/* Buffer for storage history. 
 	Buffer size must be equel window_size
 	for sunc with prefetcher learning. */
@@ -51,4 +51,6 @@ public:
 	void addRule(vector<long long> rule, long long importance);
 
 	void saveStatistics(long long lba_counter, string traceName);
+
+	void cleanAndResize(int new_size);
 };

@@ -277,7 +277,7 @@ void showRule(map< vector<long long>, long long> &L, char *output_filename)
 			if (it != iter->first.end() - 1)
 				fout << *it << " ";
 			else
-				fout << " => " << *it << "\t(support = " << supp << ")\n";		
+				fout << " => " << *it << ",\t" << supp << endl;
 		}
 	}
 
@@ -295,7 +295,7 @@ void printRules(map< vector<long long>, long long> &Rules, char *output_filename
 {
 	fstream fout(output_filename, ios_base::app);
 
-	fout << "\n\PRINT RULES()\n\n";
+	//fout << "\n\PRINT RULES()\n\n";
 
 	// print rules by line
 	for (auto iter = Rules.begin(); iter != Rules.end(); ++iter)
@@ -306,7 +306,7 @@ void printRules(map< vector<long long>, long long> &Rules, char *output_filename
 			if (it != iter->first.end() - 1)
 				fout << *it << " ";
 			else
-				fout << " => " << *it << "\t(support = " << iter->second << ")\n";
+				fout << " => " << *it << ",\t" << iter->second << "\n";
 		}
 	}
 
