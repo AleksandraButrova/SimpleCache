@@ -32,7 +32,7 @@ bool Prefetch::read(long long addr)
 
 	if (exist(addr))				// if addr exist in prefetcher
 	{
-		Storage::read(addr);		// then read it 
+		//Storage::read(addr);		// then read it 
 		update(addr);
 		return 1;
 	}
@@ -66,7 +66,7 @@ long long Prefetch::checkRules()
 	return prefetched;
 }
 
-bool Prefetch::isRule(vector <long long> rule)//map < vector<long long>, long long>::iterator)
+bool Prefetch::isRule(vector <long long> rule)
 {
 	auto buff_iter = buff.begin();
 	auto rule_iter = rule.begin();
@@ -109,11 +109,6 @@ long long Prefetch::prefetch(long long addr)
 
 void Prefetch::addRule(vector<long long> rule, long long importance)
 {
-	//if (Rules.size() >= rules_num)
-		;// Rules.erase(Rules.begin());// evict rule
-	// add rule if importance is norm
-	// if (importance ???)
-
 	Rules.emplace(rule, importance);
 }
 
@@ -126,19 +121,15 @@ void Prefetch::saveStatistics(long long lba_counter, string traceName)
 	fout << "\n================================\n\n";
 
 	//fout << "Amount of requests = " << lba_counter << endl;
-	fout <</* "# requests  = " <<*/ readReq + writeReq << endl;
+	fout << "# requests  = " << readReq + writeReq << endl;
 	//fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout <</* "# prefetcher miss  = " << */missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
-	fout << /*"# prefetcher hit  = " <<*/ readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+	fout << "# prefetcher miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
+	fout << "# prefetcher hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
 
-	fout << /*"# Wrong prefetched = "<<*/ wrongAdd <<"  (" << 100 * wrongAdd / prefetched << " %)\n";
-	fout << /*"Accuracy = " <<*/ 100 - 100 * wrongAdd / prefetched << " %\n";
+	fout << "# Wrong prefetched = "<< wrongAdd <<"  (" << 100 * wrongAdd / prefetched << " %)\n";
+	fout << "Accuracy = " << 100 - 100 * wrongAdd / prefetched << " %\n";
 
-	reads.push_back(readReq);
-	misses.push_back(missCounter);
-	wrongs.push_back(wrongAdd);
-	prefetchs.push_back(prefetched);
 }
 
 void Prefetch::cleanAndResize(int new_size)

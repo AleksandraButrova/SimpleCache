@@ -208,7 +208,7 @@ LUN04	2225205317	16	1	1463660529.065354	1463660529.066004	S*/
 			trace.close();
 			cout << "History is full." << endl;
 			cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl << endl;
-			apriori(history.item, "rules_w100_s250.txt", prefetcher.Rules);
+			apriori(history.item, "rules_test.txt", prefetcher.Rules);
 			endOfTrace = true;			// For finish while()
 		}
 	}
@@ -450,8 +450,7 @@ void proc1(string tr1)
 {
 	fillRules("rules_40.txt");
 
-	int size = 1024;
-	string stat_name = "stat_(3)_s40_10per.csv";
+	string stat_name = "test_stat";//"stat_(3)_s40_10per.csv";
 
 	fstream fout(stat_name, ios_base::app);
 	
@@ -469,9 +468,10 @@ void proc1(string tr1)
 	fout << "prefetcher.prefetched\n";
 
 	fout.close();
-
-	for (int percent = 0; percent < 10; percent += 1)
-	{
+	int size = 100000;
+	int percent = 50;
+	//for (int percent = 0; percent < 10; percent += 1)
+	//{
 		time_t time2;
 		time(&time2);
 		cout << "Now: " << ctime(&time2) << endl;
@@ -483,7 +483,7 @@ void proc1(string tr1)
 		long long lba_counter = processWithPrefetcher(tr1);
 		saveStatisticsSet(percent, lba_counter, stat_name);
 		
-	}
+	//}
 
 }
 int main() 
@@ -492,11 +492,11 @@ int main()
 
 	//string traceROSTELECOM = "\"C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW\"";
 	string traceROSTELECOM ="Rostelecom_5";
-	string traceROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(3)";
+	string traceROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(1)";
 	//"final_trace_handled_SR_5sec_NEW";
-	//processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
+	processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
 	//processing(traceROSGOS);
-	proc1(traceROSGOS);
+	//proc1(traceROSGOS);
 	//cleanAllStatistics();
 	//proc(traceROSGOS);
 	//fillRules("rules.txt");

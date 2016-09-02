@@ -52,14 +52,12 @@ void Storage::saveStatistics(long long lba_counter, string traceName)
 	fout << "\n================================\n";
 
 	// Total number lba in trace
-	fout << /*"Total request's number = " <<*/ lba_counter << endl;
+	fout << "Total request's number = " << lba_counter << endl;
 
 	// Requests to storage
-	fout << /*"# requests = " <<*/ requests_counter << endl;
+	fout << "# requests = " << requests_counter << endl;
 	/*fout << "# read requests = " << read_counter << endl;
 
 	fout << "\nRead ratio = " << 100 * read_counter * 1.0 / requests_counter << endl;
 	fout << "Write ratio = " << 100 * (1 - read_counter * 1.0 / requests_counter) << endl;*/
-
-	reqs.push_back(requests_counter);
 }

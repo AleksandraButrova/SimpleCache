@@ -16,7 +16,6 @@ private:
 
 public:
 	long long prefetched;
-	vector <long long> prefetchs;
 	/* Buffer for storage history. 
 	Buffer size must be equel window_size
 	for sunc with prefetcher learning. */

@@ -7,11 +7,11 @@ using namespace std;
 
 RAM::RAM(){
 	Storage();
-	filled = 0;
-	missCounter = 0;
-	readReq = 0;
-	writeReq = 0;
-	wrongAdd = 0;
+	filled = 1;
+	missCounter = 1;
+	readReq = 1;
+	writeReq = 1;
+	wrongAdd = 1;
 	size = total_RAM_entry_number;
 }
 
@@ -76,7 +76,7 @@ bool RAM::read(long long addr)
 
 	if (exist(addr))			
 	{
-		Storage::read(addr);								// then read and update
+		//Storage::read(addr);								// then read and update
 		update(addr);
 
 		HashTable.find(addr)->second.second = true;
@@ -127,25 +127,23 @@ void RAM::saveStatistics(long long lba_counter, string traceName)
 	fout << "================================\n";
 
 	//fout << "Amount of requests = " << lba_counter << endl;
-	fout <</* "# requests  = " <<*/ readReq + writeReq << endl;
+	fout << "# requests  = " << readReq + writeReq << endl;
 	//fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout <</* "# cache miss  = " <<*/ missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
-	fout << /*"# cache hit  = " <<*/ readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
+	fout << "# cache miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
+	fout << "# cache hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
 
-	reads.push_back(readReq);
-	misses.push_back(missCounter);
-	wrongs.push_back(wrongAdd);
 }
-
 
 void RAM::cleanAndResize(int new_size)
 {
 	size = new_size;
 
-	filled = 0;
-	missCounter = 0;
-	readReq = 0;
+	filled = 1;
+	missCounter = 1;
+	readReq = 1;
+	writeReq = 1;
+	wrongAdd = 1;
 
 	LRU.clear();
 	HashTable.clear();
