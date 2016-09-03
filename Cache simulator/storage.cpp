@@ -7,8 +7,8 @@ using namespace std;
 
 Storage::Storage()
 {
-	read_counter = 1;
-	requests_counter = 1;
+	read_counter = 0;
+	requests_counter = 0;
 }
 void Storage::read(long long addr)
 {
@@ -40,8 +40,8 @@ void Storage::printStatistics(long long lba_counter)
 
 void Storage::cleanStatistics()
 {
-	requests_counter = 1;
-	read_counter = 1;
+	requests_counter = 0;
+	read_counter = 0;
 }
 
 void Storage::saveStatistics(long long lba_counter, string traceName)

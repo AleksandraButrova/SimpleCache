@@ -8,12 +8,12 @@ using namespace std;
 Prefetch::Prefetch()
 {
 	size = prefetch_entry_num;
-	filled = 1;
-	missCounter = 1;
-	readReq = 1;
-	writeReq = 1;
-	wrongAdd = 1;
-	prefetched = 1;
+	filled = 0;
+	missCounter = 0;
+	readReq = 0;
+	writeReq = 0;
+	wrongAdd = 0;
+	prefetched = 0;
 }
 
 void Prefetch::pustToBuff(long long addr)
@@ -44,31 +44,50 @@ bool Prefetch::read(long long addr)
 	}
 }
 
+void Prefetch::add(long long num, bool used)
+{
+	Chunk *temp = new Chunk(num);
+
+	if (filled >= size)
+	{
+		evict();
+		//cout<<"ADD"<<endl;
+	}
+
+	LRU.push_front(temp);
+
+	pair< list<Chunk*>::iterator, bool > p(LRU.begin(), used);
+	HashTable.emplace(num, p);
+
+	filled++;
+}
+
 long long Prefetch::checkRules()
 {
 
 	//cout << "\nCheck...\n";
-	for (auto rules_iter = Rules.begin(); rules_iter != Rules.end(); rules_iter++)
-	{
-		/* If rule with chuck to prefetch exists in prefetcher
-		we shouldn't check this rule as it is useless. */
-		if (exist(rules_iter->first[(rules_iter->first).size() - 1]))
-			break;
-
-		if (isRule(rules_iter->first))
-			prefetched = prefetch((rules_iter->first)[rules_iter->first.size() - 1]);
-	}
+	//for (auto rules_iter = Rules.begin(); rules_iter != Rules.end(); rules_iter++)
+	//{
+	//	/* If rule with chuck to prefetch exists in prefetcher
+	//	we shouldn't check this rule as it is useless. */
+	//	if (exist(rules_iter->first[(rules_iter->first).size() - 1]))
+	//		break;
+	//	if (isRule(rules_iter->first))
+	//		prefetched = prefetch((rules_iter->first)[rules_iter->first.size() - 1]);
+	//}
 	//cout << "\End check.\n";
-
 	/*=================================
 	Prefetched address can be not alone
 	==================================*/
+	vector <long long> temp;
+	temp.push_back(buff.back());
+	isRule(temp);
 	return prefetched;
 }
 
 bool Prefetch::isRule(vector <long long> rule)
 {
-	auto buff_iter = buff.begin();
+	/*auto buff_iter = buff.begin();
 	auto rule_iter = rule.begin();
 
 	bool find = false;
@@ -88,20 +107,33 @@ bool Prefetch::isRule(vector <long long> rule)
 			}
 		}
 	}
-	return true;
+	return true*/;
+	auto it = Rules.find(rule);
+	
+	if (it != Rules.end())
+	{
+		prefetch(it->second);
+		return true;
+	}
+	return false;
+
 }
 
 // Return prefetched address or 0 in other case
-long long Prefetch::prefetch(long long addr)
+long long Prefetch::prefetch(vector <long long> addresses)
 {
-	if (exist(addr))				// if addr exist in prefetcher
-		update(addr);				// it is for this addr remains in prefetcher longer
-	else
+	for (int i = 0; i < addresses.size(); i++)
 	{
-		prefetched++;
+		long long addr = addresses[i];
 
-		add(addr, false);
-		return addr;
+		if (exist(addr))				// if addr exist in prefetcher
+			update(addr);				// it is for this addr remains in prefetcher longer
+		else
+		{
+			prefetched++;
+
+			add(addr, false);
+		}
 	}
 
 	return 0;
@@ -136,12 +168,12 @@ void Prefetch::cleanAndResize(int new_size)
 {
 	size = new_size;
 
-	filled = 1;
-	missCounter = 1;
-	readReq = 1;
-	writeReq = 1;
-	wrongAdd = 1;
-	prefetched = 1;
+	filled = 0;
+	missCounter = 0;
+	readReq = 0;
+	writeReq = 0;
+	wrongAdd = 0;
+	prefetched = 0;
 
 
 	LRU.clear();

@@ -25,13 +25,6 @@ long long findNum(long long addr) {
 	return addr * (unsigned long int)lba_size / (unsigned long int)chunk_size / 1024;
 }
 
-/* Delete copies from RAM if this addr exists in prefetcher */
-void deleteCopy(long long addr)
-{
-	if (cache.exist(addr))
-		cache.remove(addr);
-}
-
 void saveAllStatistics(long long lba_counter, string trace_name)
 {
 	storage.saveStatistics(lba_counter, trace_name);
@@ -232,6 +225,8 @@ long long processWithPrefetcher(string trace_name)
 	long long size;
 	string action = "";
 	string type;
+
+	trace.getline(buff, 100);			///useless string
 
 	while (!trace.eof())
 	{
@@ -493,8 +488,10 @@ int main()
 	//string traceROSTELECOM = "\"C:\\Users\\Administrator\\Desktop\\Traces\\final_trace_handled_SR_5sec_NEW\"";
 	string traceROSTELECOM ="Rostelecom_5";
 	string traceROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(1)";
+	string testTrace = "test_trace.txt";
+	processingLearnAndPrefetch2(testTrace, testTrace);
 	//"final_trace_handled_SR_5sec_NEW";
-	processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
+	//processingLearnAndPrefetch2(traceROSGOS, traceROSGOS);
 	//processing(traceROSGOS);
 	//proc1(traceROSGOS);
 	//cleanAllStatistics();

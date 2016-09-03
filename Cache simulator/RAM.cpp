@@ -7,11 +7,11 @@ using namespace std;
 
 RAM::RAM(){
 	Storage();
-	filled = 1;
-	missCounter = 1;
-	readReq = 1;
-	writeReq = 1;
-	wrongAdd = 1;
+	filled = 0;
+	missCounter = 0;
+	readReq = 0;
+	writeReq = 0;
+	wrongAdd = 0;
 	size = total_RAM_entry_number;
 }
 
@@ -139,11 +139,11 @@ void RAM::cleanAndResize(int new_size)
 {
 	size = new_size;
 
-	filled = 1;
-	missCounter = 1;
-	readReq = 1;
-	writeReq = 1;
-	wrongAdd = 1;
+	filled =01;
+	missCounter = 0;
+	readReq = 0;
+	writeReq = 0;
+	wrongAdd = 0;
 
 	LRU.clear();
 	HashTable.clear();

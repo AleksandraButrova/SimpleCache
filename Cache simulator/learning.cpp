@@ -22,7 +22,7 @@ void History::push_back(long long num)
 }
 
 
-void apriori(vector<vector<long long>> history, char *output_filename, map < vector<long long>, long long> &Rules)
+void apriori(vector<vector<long long>> history, char *output_filename, map < vector<long long>, vector <long long>> &Rules)
 {
 	//vector<vector<long long>, long long> SetSupport;
 
@@ -50,7 +50,7 @@ map <vector<long long>, long long> makeL1(vector<vector<long long>> history)
 
 	int window_num = 0;
 
-	for (auto it1 = history.begin(); it1 != history.end() - 1; ++it1)
+	for (auto it1 = history.begin(); it1 != history.end(); ++it1)
 	{
 		for (auto it2 = it1->begin(); it2 != it1->end(); ++it2)
 		{
@@ -81,7 +81,7 @@ map <vector<long long>, long long> makeL1(vector<vector<long long>> history)
 	// delete sequential with support less min_supp
 	for (auto it = L1.begin(); it != L1.end(); it++)
 	{
-		if (it->second.first >= 20)//min_supp) // !!!!
+		if (it->second.first >= min_supp) // !!!!
 			res.emplace(it->first, it->second.first);
 
 	}
@@ -269,15 +269,15 @@ void showRule(map< vector<long long>, long long> &L, char *output_filename)
 		if (s == 1)
 			continue;
 
-		double supp = double((*L.find(iter->first)).second);	
+		double supp = double(iter->second);
 
 		// print one line (one rule) in correct form
 		for (auto it = (iter->first).begin(); it != iter->first.end(); it++)
 		{
 			if (it != iter->first.end() - 1)
-				fout << *it << " ";
+				fout << *it << ", ";
 			else
-				fout << " => " << *it << ",\t" << supp << endl;
+				fout << *it << ",\t" << supp << endl;
 		}
 	}
 
@@ -285,13 +285,33 @@ void showRule(map< vector<long long>, long long> &L, char *output_filename)
 }
 
 // save rules to prefetcher with their support as importance of rule
-void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, long long> &Rules)
+void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, vector<long long>> &Rules)
 {
 	for (auto iter = L.begin(); iter != L.end(); ++iter)
-		Rules.emplace(iter->first, iter->second);
+	{
+		vector <long long> rule_beg, rule_end;
+		
+		auto it_v = iter->first.begin();
+		long long rule_e = *it_v;
+		it_v++;
+		
+		for (it_v; it_v != iter->first.end(); it_v++)
+		{
+			rule_beg.push_back(rule_e);
+			rule_e = *it_v;
+		}
+		rule_end.push_back(rule_e);
+		
+		auto finded = Rules.find(rule_beg);
+		if (finded == Rules.end())
+			Rules.emplace(rule_beg, rule_end);
+		else
+			finded->second.push_back(rule_e);
+	}
+		
 }
 
-void printRules(map< vector<long long>, long long> &Rules, char *output_filename)
+void printRules(map< vector<long long>, vector <long long>> &Rules, char *output_filename)
 {
 	fstream fout(output_filename, ios_base::app);
 
@@ -302,12 +322,9 @@ void printRules(map< vector<long long>, long long> &Rules, char *output_filename
 	{
 		// print one line (one rule) in correct form
 		for (auto it = (iter->first).begin(); it != iter->first.end(); it++)
-		{
-			if (it != iter->first.end() - 1)
-				fout << *it << " ";
-			else
-				fout << " => " << *it << ",\t" << iter->second << "\n";
-		}
+			fout << *it << ", ";
+				
+		//fout << iter->second << endl;
 	}
 
 	fout.close();

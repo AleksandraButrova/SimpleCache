@@ -24,8 +24,8 @@ public:
 	/* Store rules.
 	Vector is rule where the last element is chuck for prefect.
 	long long is support */
-	map < vector<long long>, long long> Rules;
-
+	//map < vector<long long>, long long> Rules;
+	map <vector<long long>, vector <long long>> Rules;
 	Prefetch();
 
 	/* LRU structure.
@@ -37,13 +37,14 @@ public:
 	 else "0" (in case chunk does not exist in prefetcher). */
 	bool read(long long addr);
 	
+	void add(long long num, bool used);
 
 	// With every request for read check rukes for prefetching
 	long long checkRules();
 	bool isRule(vector<long long> rule);
 
 	// Prefetch chunk "addr" (works like add and update)
-	long long prefetch (long long addr);
+	long long prefetch (vector <long long> addr);
 
 
 	/* Let's add rules there for limitation its numbers. */

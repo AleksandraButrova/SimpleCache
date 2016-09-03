@@ -2,6 +2,7 @@
 #include "param.h"
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include <map>
 
 using namespace std;
@@ -23,7 +24,7 @@ public:
 
 
 // Methods for learning
-void apriori(vector<vector<long long>> history, char *output_filename, map< vector<long long>, long long> &Rules);
+void apriori(vector<vector<long long>> history, char *output_filename, map< vector<long long>, vector <long long>> &Rules);
 
 map <vector<long long>, long long> makeL1(vector<vector<long long>> history);
 
@@ -49,6 +50,6 @@ int genRecursion(int n, vector<long long> seq, vector<long long> last, vector<ve
 void showRule(map< vector<long long>, long long> &SetSupport, char *output_filename);
 
 // save rules to prefetcher
-void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, long long> &Rules);
+void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, vector <long long>> &Rules);
 
-void printRules(map< vector<long long>, long long> &Rules, char *output_filename);
+void printRules(map< vector<long long>, vector <long long>> &Rules, char *output_filename);
