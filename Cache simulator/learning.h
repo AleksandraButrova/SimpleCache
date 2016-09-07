@@ -24,7 +24,7 @@ public:
 
 
 // Methods for learning
-void apriori(vector<vector<long long>> history, char *output_filename, map< vector<long long>, vector <long long>> &Rules);
+void apriori(vector<vector<long long>> history, string output_filename, map< vector<long long>, vector <long long>> &Rules);
 
 map <vector<long long>, long long> makeL1(vector<vector<long long>> history);
 
@@ -47,9 +47,9 @@ vector<vector<long long>> genSubseq(vector<long long> seq);
 int genRecursion(int n, vector<long long> seq, vector<long long> last, vector<vector<long long>> &Subseqs);
 
 
-void showRule(map< vector<long long>, long long> &SetSupport, char *output_filename);
+void showRule(map< vector<long long>, long long> &SetSupport, string output_filename);
 
 // save rules to prefetcher
 void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, vector <long long>> &Rules);
 
-void printRules(map< vector<long long>, vector <long long>> &Rules, char *output_filename);
+void printRules(map< vector<long long>, vector <long long>> &Rules, string output_filename);

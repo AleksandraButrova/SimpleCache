@@ -48,7 +48,7 @@ public:
 
 
 	/* Let's add rules there for limitation its numbers. */
-	void addRule(vector<long long> rule, long long importance);
+	void addRule(vector<long long> rule_beg, vector<long long> rule_end);
 
 	void saveStatistics(long long lba_counter, string traceName);
 

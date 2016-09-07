@@ -22,7 +22,7 @@ void History::push_back(long long num)
 }
 
 
-void apriori(vector<vector<long long>> history, char *output_filename, map < vector<long long>, vector <long long>> &Rules)
+void apriori(vector<vector<long long>> history, string output_filename, map < vector<long long>, vector <long long>> &Rules)
 {
 	//vector<vector<long long>, long long> SetSupport;
 
@@ -134,7 +134,9 @@ map <vector<long long>, long long> scanHistory(vector<vector<long long>> history
 		if (seq_supp >= min_supp) 
 		{
 			SeqSet.emplace(*iter, seq_supp);
+
 		}
+		break;
 	}
 	return SeqSet;
 }
@@ -257,7 +259,7 @@ int genRecursion(int n, vector<long long> seq, vector<long long> last, vector<ve
 }
 
 // show all rules
-void showRule(map< vector<long long>, long long> &L, char *output_filename)
+void showRule(map< vector<long long>, long long> &L, string output_filename)
 {
 	fstream fout(output_filename, ios_base::app);
 

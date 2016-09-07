@@ -139,9 +139,13 @@ long long Prefetch::prefetch(vector <long long> addresses)
 	return 0;
 }
 
-void Prefetch::addRule(vector<long long> rule, long long importance)
+void Prefetch::addRule(vector<long long> rule_beg, vector<long long> rule_end)
 {
-	Rules.emplace(rule, importance);
+	auto finded = Rules.find(rule_beg);
+	if (finded == Rules.end())
+		Rules.emplace(rule_beg, rule_end);
+	else
+		finded->second.push_back(rule_end[0]);
 }
 
 void Prefetch::saveStatistics(long long lba_counter, string traceName)
