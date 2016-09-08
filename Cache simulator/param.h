@@ -15,8 +15,5 @@
 #define learning_lim			window_size * 3					// the number of chunks in learning mode (history windows number)
 
 #define min_supp				5							//	Minimal number of windows which supports frequent sequence (single lba or sequence of lba)
-#define min_conf				2//window_size * 0.02			/*(?)*/					//	Minimal number of entries item in a window
-
-#define rules_numer				100			/*(?)*/					//	TOP stored rules
 
 

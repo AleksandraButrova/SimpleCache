@@ -49,10 +49,7 @@ void Prefetch::add(long long num, bool used)
 	Chunk *temp = new Chunk(num);
 
 	if (filled >= size)
-	{
 		evict();
-		//cout<<"ADD"<<endl;
-	}
 
 	LRU.push_front(temp);
 
@@ -64,22 +61,7 @@ void Prefetch::add(long long num, bool used)
 
 long long Prefetch::checkRules()
 {
-
-	//cout << "\nCheck...\n";
-	//for (auto rules_iter = Rules.begin(); rules_iter != Rules.end(); rules_iter++)
-	//{
-	//	/* If rule with chuck to prefetch exists in prefetcher
-	//	we shouldn't check this rule as it is useless. */
-	//	if (exist(rules_iter->first[(rules_iter->first).size() - 1]))
-	//		break;
-	//	if (isRule(rules_iter->first))
-	//		prefetched = prefetch((rules_iter->first)[rules_iter->first.size() - 1]);
-	//}
-	//cout << "\End check.\n";
-	/*=================================
-	Prefetched address can be not alone
-	==================================*/
-	vector <long long> temp;
+		vector <long long> temp;
 	temp.push_back(buff.back());
 	isRule(temp);
 	return prefetched;

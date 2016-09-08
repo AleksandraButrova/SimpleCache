@@ -316,17 +316,13 @@ void saveRules(map< vector<long long>, long long> &L, map< vector<long long>, ve
 void printRules(map< vector<long long>, vector <long long>> &Rules, char *output_filename)
 {
 	fstream fout(output_filename, ios_base::app);
-
-	//fout << "\n\PRINT RULES()\n\n";
-
+	
 	// print rules by line
 	for (auto iter = Rules.begin(); iter != Rules.end(); ++iter)
 	{
 		// print one line (one rule) in correct form
 		for (auto it = (iter->first).begin(); it != iter->first.end(); it++)
 			fout << *it << ", ";
-				
-		//fout << iter->second << endl;
 	}
 
 	fout.close();
