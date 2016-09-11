@@ -386,17 +386,18 @@ void processingAndSaveCSVwithFilling(string trace_name, string rules_name, strin
 
 int main() 
 {
-	string rules_name = "rules_sup_5_w1e3";
+	string rules_name = "test_rules.txt", 
+		testTrace = "test_trace.txt";
 	string stat_name = "stat1_size1e5_my.csv";
 	string trace_ROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(1)";
 	string trace_ROSGOS_all = "log_2016-05-19_15%3A22%3A08.977654.txt_SR", 
 		stat2 = "stat_1.csv";
 
 	
-	//processingLearn(testTrace, rulesName);
+	processingLearn(testTrace, rules_name);
 	
-	processingAndSaveCSVwithFilling(trace_ROSGOS, rules_name, stat_name);
-	processingAndSaveCSV(trace_ROSGOS_all, stat2);
+	//processingAndSaveCSVwithFilling(trace_ROSGOS, rules_name, stat_name);
+	//processingAndSaveCSV(trace_ROSGOS_all, stat2);
 	system("PAUSE");
 	return 0;
 }

@@ -30,14 +30,12 @@ void apriori(vector<vector<long long>> history, string output_filename, map < ve
 	map <vector<long long>, long long> L;
 	L = makeL1(history);
 	int k = 2;				// iteration number
-	while (L.size())
-	{
-		L = scanHistory(history, generateCk(k, L, history), L);
-		cout << "Hey rules!" << endl;
-		saveRules(L, Rules);
-		showRule(L, output_filename);
-		k++;
-	}
+	L = scanHistory(history, genCk(k, L, history), L);
+	cout << "Hey rules!" << endl;
+	saveRules(L, Rules);
+	showRule(L, output_filename);
+	
+	
 	//printRules(Rules, output_filename);
 }
 
@@ -123,23 +121,63 @@ void deleteUnfrequentFromHistory(vector<vector<long long>> &history, map <vector
 
 
 // Scan history and find frequent sequences in that, then return this set
-map <vector<long long>, long long> scanHistory(vector<vector<long long>> history, vector<vector<long long>> Ck, map <vector<long long>, long long> L)
+map <vector<long long>, long long> scanHistory(vector<vector<long long>> history, map<vector<long long>, pair<long long, int>> Ck, map <vector<long long>, long long> L)
 {
 	map <vector<long long>, long long> SeqSet;
+	vector <long long> buff;
+	int wind_num = 0;
 
-	for (auto iter = Ck.begin(); iter != Ck.end(); ++iter)
+	for (auto window = history.begin(); window != history.end(); window++, wind_num++)
 	{
-		// check it is a frequent seq
-		long long seq_supp = calSupport(history, *iter);
-		if (seq_supp >= min_supp) 
-		{
-			SeqSet.emplace(*iter, seq_supp);
+		for (auto num = window->begin(); num != window->end(); num++)
+		{	
+			if (buff.empty() == true)
+			{	
+				buff.push_back(*num);
+				continue;
+			}
+			
+			for (auto first = buff.begin(); first != buff.end(); first++)
+			{
 
+				vector <long long> seqPair;
+
+				seqPair.push_back(*first);
+				seqPair.push_back(*num);
+
+
+
+				auto temp = Ck.find(seqPair);
+
+				if (temp != Ck.end() && temp->second.second != wind_num)
+				{
+					temp->second.first = temp->second.first + 1;
+					temp->second.second = wind_num;
+				}
+
+
+
+
+				seqPair.clear();
+				
+			}
+			buff.push_back(*num);
 		}
-		break;
+		buff.clear();
+		
+	}
+
+	for (auto cand = Ck.begin(); cand != Ck.end(); cand++)
+	{
+		if (cand->second.first >= min_supp)
+			SeqSet.emplace(cand->first, cand->second.first);
+			//Ck.erase(cand->first);
+
+
 	}
 	return SeqSet;
 }
+
 
 // for each window in history it counts sequence support
 long long calSupport(vector<vector<long long>> history, vector<long long> seq)
@@ -203,6 +241,33 @@ vector<vector<long long>> generateCk(int k, map <vector<long long>, long long> &
 					ret.push_back(temp);
 				if (k > 2 && !hasInfrequent(temp, L))
 					ret.push_back(temp);
+			}
+		}
+	}
+	return ret;
+}
+
+map<vector<long long>, pair<long long, int>> genCk(int k, map <vector<long long>, long long> &L, vector<vector<long long>> history)
+{
+	map<vector<long long>, pair<long long, int>> ret;
+
+	for (auto it1 = L.begin(); it1 != L.end(); ++it1)
+	{
+		for (auto it2 = L.begin(); it2 != L.end(); ++it2)
+		{
+			vector<long long> seq1((*it1).first.begin(), --(*it1).first.end())
+				, seq2((*it2).first.begin(), --(*it2).first.end());
+
+			long long n1 = *(--(*it1).first.end())
+				, n2 = *(--(*it2).first.end());
+
+			if (seq1 == seq2 && n1 != n2)
+			{
+				vector<long long> temp = it1->first;
+				temp.push_back(n2);
+
+				if (k >= 2)
+					ret.emplace(temp, make_pair(0, -1));
 			}
 		}
 	}

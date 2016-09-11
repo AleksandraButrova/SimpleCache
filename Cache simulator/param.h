@@ -11,9 +11,9 @@
 #define RAM_entry_num			RAM_size * 1024 / chunk_size					// the number 
 #define prefetch_entry_num		prefetch_size * 1024 / chunk_size				// the number 
 
-#define window_size				1000								// the number of chunk in one window
+#define window_size				5								// the number of chunk in one window
 #define learning_lim			window_size * 3					// the number of chunks in learning mode (history windows number)
 
-#define min_supp				5							//	Minimal number of windows which supports frequent sequence (single lba or sequence of lba)
+#define min_supp				3							//	Minimal number of windows which supports frequent sequence (single lba or sequence of lba)
 
 
