@@ -1,4 +1,3 @@
-#include <string>
 #include <vector>
 
 using namespace std;
@@ -8,16 +7,13 @@ but some methods are needed to be.*/
 class Storage{
 	 // here may be data 
 public:
-	long long requests_counter;
-	long long read_counter;
-
-	vector <long long> reqs;
-
+	long long requests;
+	long long readReq;
+	
 	Storage();
 
 	void write(long long addr);							//	It writes data on disks.
 	void read(long long addr);							//	It reads data from desks. 
-	void printStatistics(long long lba_counter);		//	It prints miss counter and request counter on console.
 	void cleanStatistics();
-	void saveStatistics(long long lba_counter, string traceName);
+	void saveStatistics(long long lba_counter, char* traceName, char* statName);
  };

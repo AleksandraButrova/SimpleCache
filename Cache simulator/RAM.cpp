@@ -9,10 +9,8 @@ RAM::RAM(){
 	Storage();
 	filled = 0;
 	missCounter = 0;
-	readReq = 0;
-	writeReq = 0;
 	wrongAdd = 0;
-	size = total_RAM_entry_number;
+	this->size = total_RAM_entry_num;
 }
 
 void RAM::evict(){
@@ -37,11 +35,8 @@ void RAM::add(long long num, bool used)
 {
 	Chunk *temp = new Chunk(num);
 	
-	if (filled >= size ) 	
-	{
+	if (filled >= this->size ) 	
 		evict();		
-		//cout<<"ADD"<<endl;
-	}
 
 	LRU.push_front(temp);
 	
@@ -72,13 +67,13 @@ void RAM::update(long long num){
 // else "0" (in case chunk does not exist in RAM).
 bool RAM::read(long long addr)
 {
-	readReq++;
+	Storage::read(addr);
 
 	if (exist(addr))			
-	{
-		//Storage::read(addr);								// then read and update
+	{								// then read and update
 		update(addr);
 
+		// confirn the usefulness of cached addr
 		HashTable.find(addr)->second.second = true;
 
 		return 1;
@@ -88,7 +83,6 @@ bool RAM::read(long long addr)
 		missCounter++;
 
 		add(addr, false);									// else add and write
-		Storage::write(addr);
 	}
 	return 0;
 }
@@ -97,8 +91,9 @@ void RAM::write(long long addr)
 {
 	if (exist(addr))			// if addr exist at RAM 
 	{
+		Storage::write(addr);
+
 		update(addr);			// then update
-		writeReq++;
 	}
 }
 
@@ -118,34 +113,38 @@ void RAM::remove(long long addr)
 	filled--;
 }
 
-void RAM::saveStatistics(long long lba_counter, string traceName)
+void RAM::saveStatistics(long long lba_counter, char* traceName, char* statName)
 {
-	fstream fout("statistics.txt", ios_base::app);
-	fout << "================================\n";
-	fout << "================================\n";
+	fstream fout(statName, ios_base::app);
+	fout << "======================================================================\n";
 	fout << "RAM\n";
 	fout << "================================\n";
 
-	//fout << "Amount of requests = " << lba_counter << endl;
-	fout << "# requests  = " << readReq + writeReq << endl;
-	//fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
+	fout << "# requests  = " << requests << endl;
+	fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (requests) << " %)\n";
+	fout << "# cache miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / requests << " %)\n";
+	
+}
 
-	fout << "# cache miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
-	fout << "# cache hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
-
+void RAM::cleanStatistics()
+{
+	missCounter = 0;
+	readReq = 0;
+	wrongAdd = 0;
+	requests = 0;
+}
+int RAM::ret_size()
+{
+	return size;
 }
 
 void RAM::cleanAndResize(int new_size)
 {
-	size = new_size;
-
-	filled =01;
-	missCounter = 0;
-	readReq = 0;
-	writeReq = 0;
-	wrongAdd = 0;
-
+	this->size = new_size;
+	
+	filled = 0;
 	LRU.clear();
 	HashTable.clear();
 
+	cleanStatistics();
 }

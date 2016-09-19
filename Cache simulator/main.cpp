@@ -16,20 +16,15 @@ Storage storage;
 Prefetch prefetcher;
 History history;
 
-/* Looking for number of chunk which includes given LBA address*/
-long long findNum(long long addr) {
-
-	return addr * (unsigned long int)lba_size / (unsigned long int)chunk_size / 1024;
-}
 
 /*Save storage, cache and prefetcher statistics of trace "trace_name" (the second argument)
 in file "statistic.txt".
 Warning: do not use this function when prefetcher has not been used because devesion by zero will occure.*/
-void saveAllStatistics(long long lba_counter, string trace_name)
+void saveAllStatistics(long long lba_counter, char* trace_name, char* stat_name)
 {
-	storage.saveStatistics(lba_counter, trace_name);
-	cache.saveStatistics(lba_counter, trace_name);
-	prefetcher.saveStatistics(lba_counter, trace_name);
+	storage.saveStatistics(lba_counter, trace_name, stat_name);
+	cache.saveStatistics(lba_counter, trace_name, stat_name);
+	prefetcher.saveStatistics(lba_counter, trace_name, stat_name);
 }
 
 /*Save current storage, cache and prefetcher statistics in file "stat_name"(the third argument) in csv format.
@@ -38,7 +33,7 @@ void saveStatisticsCSV(float percent, long long lba_counter, string stat_name)
 {
 	fstream fout(stat_name, ios_base::app);
 	
-	fout << lba_counter << ", ";
+	/*fout << lba_counter << ", ";
 	fout << percent << ", ";
 	fout << storage.read_counter << ", ";
 	fout << cache.readReq << ", ";
@@ -47,7 +42,7 @@ void saveStatisticsCSV(float percent, long long lba_counter, string stat_name)
 	fout << prefetcher.missCounter << ", ";
 	fout << prefetcher.wrongAdd << ", ";
 	fout << prefetcher.wrongAdd * 1.0 / prefetcher.prefetched << ", ";
-	fout << prefetcher.prefetched << "\n";
+	fout << prefetcher.prefetched << "\n";*/
 	
 	fout.close();
 }
@@ -73,18 +68,18 @@ bool stepLearn(long long ch, string action)
 /* Processing one chunk "ch" with prefetcher, RAM and storage.*/
 void stepPrefRamStor(long long ch, string action)
 {
-	if (prefetcher.size != 0)			// if prefetcher is anable (if we have allocated memory for him)
+	if (prefetcher.ret_size() != 0)			// if prefetcher is anable (if we have allocated memory for him)
 		if (!prefetcher.read(ch))		// if request for read and chunk 'ch' doesn't exist in prefetcher
 			if (!cache.read(ch))		// then read from cache 
 				storage.read(ch);		// and if it is impossible then read from storage
 	
-	if (prefetcher.size == 0)			// prefetcher is disable (if we have not allocated memory for him)
+	if (prefetcher.ret_size() == 0)			// prefetcher is disable (if we have not allocated memory for him)
 		if (!cache.read(ch))			// then read from cache
 			storage.read(ch);			// and if it is impossible then read from storage
 }
 
 /* One trace is processed one time without learning and prefetcher.*/
-void processing(string trace_name)
+void processing(char* trace_name, char* stat_name)
 {
 	ifstream trace(trace_name);
 
@@ -132,14 +127,14 @@ void processing(string trace_name)
 		
 		
 	}
-	storage.saveStatistics(lba_counter, trace_name);
-	cache.saveStatistics(lba_counter, trace_name);
+	storage.saveStatistics(lba_counter, trace_name, stat_name);
+	cache.saveStatistics(lba_counter, trace_name, stat_name);
 
 	trace.close();
 }
 
 /* Learning prefetcher on trace */ 
-void processWithLearning(string trace_name, string rulesName)
+int processWithLearning(char* trace_name, char* rulesName, char* stat_name)
 {
 	ifstream trace(trace_name);
 	
@@ -177,8 +172,8 @@ void processWithLearning(string trace_name, string rulesName)
 		type = buff;
 
 		
-		if (line_counter % 1000000 == 0)
-			cout << line_counter <<"\t" << lba_counter << endl;
+		//if (line_counter % 1000000 == 0)
+		//	cout << line_counter <<"\t" << lba_counter << endl;
 		
 		if (type == "S")
 			continue;
@@ -194,22 +189,27 @@ void processWithLearning(string trace_name, string rulesName)
 		if (endOfTrace == true)
 		{
 			trace.close();
-			cout << "History is full." << endl;
-			cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl << endl;
+			//cout << "History is full." << endl;
+			//cout << "# processed lba:\n" << line_counter << "\t" << lba_counter << endl << endl;
 			apriori(history.item, rulesName, prefetcher.Rules);
 			endOfTrace = true;			// For finish while()
 
-			storage.saveStatistics(lba_counter, trace_name);
-			cache.saveStatistics(lba_counter, trace_name);
+			storage.saveStatistics(lba_counter, trace_name, stat_name);
+			cache.saveStatistics(lba_counter, trace_name, stat_name);
+
+			return lba_counter;
 		}
 	}
 
 }
 
 /* The proccess works with prefetcher after learning. */
-long long processWithPrefetcher(string trace_name)
+long long processWithPrefetcher(char* trace_name)
 {
-
+	time_t time1;
+	time(&time1);
+	cout << "\nStart working on trace " << trace_name << " at " << ctime(&time1)<< endl;
+	
 	ifstream trace(trace_name);
 
 	char buff[100];						// buffer for reading data about request
@@ -259,24 +259,23 @@ long long processWithPrefetcher(string trace_name)
 /* Point of entry in the learning process of prefetcher.
 The first arg is trace for learning,
 the second if for obtained rules.*/
-void processingLearn(string trace_name, string rulesName)
+int processingLearn(char* trace_name, char* rulesName, char* stat_name)
 {
 	time_t time1;
 	time(&time1);
-	cout << "Now: " << ctime(&time1)<< endl;
+	cout << "Start learning on trace "<<trace_name<<" at "<< ctime(&time1)<< endl;
 	
-	processWithLearning(trace_name, rulesName);
+	return processWithLearning(trace_name, rulesName, stat_name);
 }
 
 /* Fill prefetcher rules from file.*/
-void fillRules(string rules_file)
+void fillRules(char* rules_file)
 {
 	prefetcher.Rules.clear();
 
 	fstream rules(rules_file);
 	char buff[32];
 	vector <long long> rule_beg, rule_end;
-	long long num;
 	bool  end = false;
 	string::size_type sz = 0;
 	
@@ -312,7 +311,7 @@ void fillRules(string rules_file)
 }
 
 /* Fill header of statists for understanding csv in RStudio.*/
-void fillHeaderStat(string stat_name)
+void fillHeaderStat(char* stat_name)
 {
 	fstream fout(stat_name, ios_base::app);
 
@@ -334,7 +333,7 @@ void fillHeaderStat(string stat_name)
 /* Processing trace_name (5 arg) with prefetcher 
 which have from a% to b% member in increment of step = stp.
 Save this statistic in stat_name in csv format. */
-void step(float a, float b, float stp, int size, string trace_name, string stat_name)
+void step(float a, float b, float stp, int size, char* trace_name, char* stat_name)
 {
 	for (float percent = a; percent <= b; percent += stp)
 	{
@@ -356,7 +355,7 @@ void step(float a, float b, float stp, int size, string trace_name, string stat_
 percent of prefetching size from interval. Then trace trace_name is proccessed 
 with this parameters ans save statistics in stat_name in csv format. 
 It is considered that the rules have already done.*/
-void processingAndSaveCSV(string trace_name, string stat_name)
+void processingAndSaveCSV(char* trace_name, char* stat_name)
 {
 	fillHeaderStat(stat_name);
 
@@ -370,7 +369,7 @@ void processingAndSaveCSV(string trace_name, string stat_name)
 }
 
 /* The same of processingAndSaveCSV(...) but fill prefetch rules from file.*/
-void processingAndSaveCSVwithFilling(string trace_name, string rules_name, string stat_name)
+void processingAndSaveCSVwithFilling(char* trace_name, char* rules_name, char* stat_name)
 {
 	fillRules(rules_name);
 	//fillHeaderStat(stat_name);
@@ -384,17 +383,66 @@ void processingAndSaveCSVwithFilling(string trace_name, string rules_name, strin
 	step(fromPercent, toPercent, stepPercent, size, trace_name, stat_name);
 }
 
+void learnALL(vector <char*> traces)
+{
+	fstream stat("stat_all_per0");
+	stat << "trace_num, cache_miss\n";
+	
+
+	for (int i = 0; i < traces.size(); i++)
+	{
+		prefetcher.Rules.clear();
+
+		if (i % 2 == 0)
+		{
+			char rules[50] = "rule_sup10_";
+			strcat(rules, traces[i]);
+			cout << rules << endl;
+
+			int lba_counter = processingLearn(traces[i], rules, "statALL_sup10_per0.csv");
+			cout << "Find " << prefetcher.Rules.size() + 1 << " rules.\n";
+			stat << i << ", " << cache.missCounter * 100.0 / lba_counter << endl;
+		} 
+		else
+		{
+			cache.cleanStatistics();
+
+			cout << "Number of processed lba is " << processWithPrefetcher(traces[i + 1]) << endl;
+			
+			prefetcher.Rules.clear();
+		}
+
+
+	}
+
+}
+
+
+
 int main() 
 {
-	string rules_name = "test_rules.txt", 
-		testTrace = "test_trace.txt";
-	string stat_name = "stat1_size1e5_my.csv";
-	string trace_ROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(1)";
-	string trace_ROSGOS_all = "log_2016-05-19_15%3A22%3A08.977654.txt_SR", 
-		stat2 = "stat_1.csv";
+/*
+	char buffer[10];
+	char str[20] = "sorting.exe ";
+	int i = 1;
 
+	_itoa(i, buffer, 10);
+
+	strcat(str, buffer);
+
+	cout << str << endl;*/
+
+	char* rules_name = "test_rules.txt",
+		*testTrace = "test_trace.txt";
+	char* stat_name = "stat1_size1e5_my.csv";
+	char* trace_ROSGOS = "log_2016-05-19_15%3A22%3A08.977654.txt_SR_5(1)";
+	char* trace_ROSGOS_all = "log_2016-05-19_15%3A22%3A08.977654.txt_SR",
+		*stat2 = "stat_1.csv";
+
+	vector <char*> traces = {"test_trace.txt"};
 	
-	processingLearn(testTrace, rules_name);
+	learnALL(traces);
+	//processingLearn(testTrace, rules_name);
 	
 	//processingAndSaveCSVwithFilling(trace_ROSGOS, rules_name, stat_name);
 	//processingAndSaveCSV(trace_ROSGOS_all, stat2);

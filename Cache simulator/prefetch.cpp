@@ -7,13 +7,14 @@ using namespace std;
 
 Prefetch::Prefetch()
 {
+	RAM::RAM();/*
 	size = prefetch_entry_num;
 	filled = 0;
 	missCounter = 0;
 	readReq = 0;
 	writeReq = 0;
 	wrongAdd = 0;
-	prefetched = 0;
+	prefetched = 0;*/
 }
 
 void Prefetch::pustToBuff(long long addr)
@@ -26,13 +27,16 @@ void Prefetch::pustToBuff(long long addr)
 
 bool Prefetch::read(long long addr)
 {
-	readReq++;
+	Storage::read(addr);
+
 	pustToBuff(addr);				// commit in history  for prefetcher analysis
 	checkRules();					// check rules for new prefetching
 
 	if (exist(addr))				// if addr exist in prefetcher
 	{
-		//Storage::read(addr);		// then read it 
+		// confirn the usefulness of cached addr
+		this->HashTable.find(addr)->second.second = true;
+
 		update(addr);
 		return 1;
 	}
@@ -44,27 +48,12 @@ bool Prefetch::read(long long addr)
 	}
 }
 
-void Prefetch::add(long long num, bool used)
+
+void Prefetch::checkRules()
 {
-	Chunk *temp = new Chunk(num);
-
-	if (filled >= size)
-		evict();
-
-	LRU.push_front(temp);
-
-	pair< list<Chunk*>::iterator, bool > p(LRU.begin(), used);
-	HashTable.emplace(num, p);
-
-	filled++;
-}
-
-long long Prefetch::checkRules()
-{
-		vector <long long> temp;
+	vector <long long> temp;
 	temp.push_back(buff.back());
 	isRule(temp);
-	return prefetched;
 }
 
 bool Prefetch::isRule(vector <long long> rule)
@@ -130,36 +119,35 @@ void Prefetch::addRule(vector<long long> rule_beg, vector<long long> rule_end)
 		finded->second.push_back(rule_end[0]);
 }
 
-void Prefetch::saveStatistics(long long lba_counter, string traceName)
+void Prefetch::saveStatistics(long long lba_counter, char* traceName, char* stat_name)
 {
-	fstream fout("statistics.txt", ios_base::app);
+	fstream fout(stat_name, ios_base::app);
 	fout << "================================\n";
 	fout << "================================\n";
 	fout<<"PREFETCHER\n";
 	fout << "\n================================\n\n";
 
 	//fout << "Amount of requests = " << lba_counter << endl;
-	fout << "# requests  = " << readReq + writeReq << endl;
+	fout << "# requests  = " << requests << endl;
 	//fout << "# read requests  = " << readReq << "  (" << 100 * readReq * 1.0 / (readReq + writeReq) << " %)\n";
 
-	fout << "# prefetcher miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / readReq << " %)\n";
-	fout << "# prefetcher hit  = " << readReq - missCounter << "  (" << 100 * (1 - missCounter * 1.0 / readReq) << " %)\n";
-
+	fout << "# prefetcher miss  = " << missCounter << "  (" << 100 * missCounter * 1.0 / requests << " %)\n";
+	
 	fout << "# Wrong prefetched = "<< wrongAdd <<"  (" << 100 * wrongAdd / prefetched << " %)\n";
 	fout << "Accuracy = " << 100 - 100 * wrongAdd / prefetched << " %\n";
 
+}
+void Prefetch::cleanStatistics()
+{
+	RAM::cleanStatistics();
+	prefetched = 0;
 }
 
 void Prefetch::cleanAndResize(int new_size)
 {
 	size = new_size;
 
-	filled = 0;
-	missCounter = 0;
-	readReq = 0;
-	writeReq = 0;
-	wrongAdd = 0;
-	prefetched = 0;
+	cleanStatistics();
 
 
 	LRU.clear();
